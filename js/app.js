@@ -251,6 +251,8 @@
 
     // 分辨率档位（图片模式才显示；视频接口固定 720P，无此选项）
     var resList = mm.resolutions || ['1K'];
+    var resEyebrow = document.querySelector('#resolutionGroup .eyebrow');
+    if (resEyebrow) resEyebrow.textContent = I18N.t('labelRes');
     $('#resolutionSeg').innerHTML = resList.map(function (v) {
       return '<button class="seg-btn" data-group="resolution" data-value="' + v + '">' + v + '</button>';
     }).join('');
@@ -258,12 +260,16 @@
     $('#resolutionGroup').classList.toggle('is-hidden', !isImg);
 
     // 比例
+    var ratioEyebrow = document.querySelector('#ratioSeg').parentElement.querySelector('.eyebrow');
+    if (ratioEyebrow) ratioEyebrow.textContent = I18N.t('labelRatio');
     $('#ratioSeg').innerHTML = segHtml(mm.ratios, 'ratio');
     // 风格（仅图片模式）
-    $('#styleSeg').innerHTML = segHtml(STYLES, 'style');
+    var styleEyebrow = document.querySelector('#styleGroup .eyebrow');
+    if (styleEyebrow) styleEyebrow.textContent = I18N.t('labelStyle');
+    $('#styleSeg').innerHTML = segHtml(I18N.D[_lang].styleLabels, 'style');
     // 自定义比例时显示宽高输入
     var customRow = '<div class="param-group is-hidden" id="customRatioGroup">' +
-      '<span class="eyebrow">自定义比例（宽×高）</span>' +
+      '<span class="eyebrow">' + I18N.t('labelCustom') + I18N.t('labelRatio') + '</span>' +
       '<div style="display:flex;gap:8px;align-items:center;">' +
         '<input type="number" class="sp-input" id="customW" value="' + p.customRatioW + '" min="256" max="8192" step="64" style="width:100px;padding:7px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg-elev);color:var(--text);font-size:13px;">' +
         '<span style="color:var(--text-2);font-size:13px">×</span>' +
@@ -277,8 +283,10 @@
     if (!existing && paramsEl) paramsEl.insertAdjacentHTML('afterend', customRow);
 
     // 视频时长
+    var countEyebrow = document.querySelector('#countGroup .eyebrow');
+    if (countEyebrow) countEyebrow.textContent = I18N.t('labelCount');
     $('#countSeg').innerHTML = [1, 4].map(function (v) {
-      return '<button class="seg-btn" data-group="count" data-value="' + v + '">' + v + ' 张</button>';
+      return '<button class="seg-btn" data-group="count" data-value="' + v + '">' + v + ' ' + (I18N.t('imgCount') || v + '张') + '</button>';
     }).join('');
 
     $('#styleGroup').classList.toggle('is-hidden', !isImg);
@@ -291,27 +299,28 @@
       // 添加自定义选项
       var maxDur = mm.customDurMax || 12;
       dd.push('自定义');
+      var durEyebrow = document.querySelector('#durationGroup .eyebrow');
+      if (durEyebrow) durEyebrow.textContent = I18N.t('labelDuration');
       $('#durationSeg').innerHTML = dd.map(function (v) {
-        return '<button class="seg-btn" data-group="duration" data-value="' + v + '">' +
-          (v === '自定义' ? '自定义' : v >= 60 ? '1 分钟' : v + ' 秒') +
-        '</button>';
+        if (v === '自定义') return '<button class="seg-btn" data-group="duration" data-value="' + v + '">' + I18N.t('labelCustom') + '</button>';
+        return '<button class="seg-btn" data-group="duration" data-value="' + v + '">' + (v >= 60 ? I18N.t('minLabel') : I18N.t('secLabel', v)) + '</button>';
       }).join('');
       // 自定义时长的输入
       var durCustomRow = '<div class="param-group is-hidden" id="customDurGroup">' +
-        '<span class="eyebrow">视频时长（秒）</span>' +
+        '<span class="eyebrow">' + I18N.t('labelDuration') + '</span>' +
         '<div style="display:flex;align-items:center;gap:8px;">' +
           '<input type="number" class="sp-input" id="customDurInput" value="' + p.customDuration + '" min="1" max="' + maxDur + '" step="1" style="width:80px;padding:7px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg-elev);color:var(--text);font-size:13px;">' +
-          '<span style="color:var(--text-3);font-size:11.5px">秒（最大 ' + maxDur + 's）</span>' +
+          '<span style="color:var(--text-3);font-size:11.5px">' + I18N.t('secLabel') + '（最大 ' + maxDur + 's）</span>' +
         '</div>' +
       '</div>';
       var existingDur = document.querySelector('#customDurGroup');
       var durGroup = document.querySelector('#durationGroup');
       if (!existingDur && durGroup) durGroup.insertAdjacentHTML('afterend', durCustomRow);
-      // 更新提示
-      $('#durationGroup .eyebrow').textContent = '视频时长';
 
       // 相机
-      $('#cameraSeg').innerHTML = segHtml(CAMERAS, 'camera');
+      var cameraEyebrow = document.querySelector('#cameraGroup .eyebrow');
+      if (cameraEyebrow) cameraEyebrow.textContent = I18N.t('labelCamera');
+      $('#cameraSeg').innerHTML = segHtml(I18N.D[_lang].cameraLabels, 'camera');
       // 默认时长适配
       if (dd.indexOf(p.duration) < 0 && p.duration !== '自定义') p.duration = dd[0];
     }
