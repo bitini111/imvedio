@@ -286,7 +286,8 @@
     var countEyebrow = document.querySelector('#countGroup .eyebrow');
     if (countEyebrow) countEyebrow.textContent = I18N.t('labelCount');
     $('#countSeg').innerHTML = [1, 4].map(function (v) {
-      return '<button class="seg-btn" data-group="count" data-value="' + v + '">' + v + ' ' + (I18N.t('imgCount') || v + '张') + '</button>';
+      var key = v === 1 ? 'imgCountOne' : 'imgCount';
+      return '<button class="seg-btn" data-group="count" data-value="' + v + '">' + I18N.t(key, v) + '</button>';
     }).join('');
 
     $('#styleGroup').classList.toggle('is-hidden', !isImg);
