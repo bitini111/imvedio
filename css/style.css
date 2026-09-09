@@ -196,7 +196,7 @@ textarea { font-family: inherit; }
   padding: 6px;
   display: none;
 }
-.lang-dropdown.open { display: block; }
+.lang-dropdown.open { display: block !important; }
 .lang-option {
   display: flex; align-items: center; gap: 10px;
   padding: 8px 12px;
