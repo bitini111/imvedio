@@ -16,8 +16,8 @@
     <div class="topbar-inner">
       <div class="brand">
         <span class="brand-mark" aria-hidden="true">✦</span>
-        <span class="brand-name">绘光</span>
-        <span class="brand-tag">AI 创作</span>
+        <span class="brand-name" data-i18n="appName">绘光</span>
+        <span class="brand-tag" data-i18n="appTag">AI 创作</span>
       </div>
 
       <nav class="mode-switch" id="modeSwitch" role="tablist" aria-label="创作模式" aria-orientation="horizontal">
@@ -39,8 +39,25 @@
         </button>
         <button class="icon-btn" id="historyBtn" data-action="open-history" aria-label="历史记录">
           <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 7v5l3 2"/></svg>
-          <span>历史</span>
+          <span data-i18n="btnHistory">历史</span>
         </button>
+        <div class="lang-selector" id="langSelector">
+          <button class="icon-btn lang-btn" id="langBtn" aria-label="切换语言" title="切换语言">
+            <span class="lang-flag" id="langFlag">🇨🇳</span>
+            <span class="lang-code" id="langCode">中</span>
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="lang-dropdown is-hidden" id="langDropdown">
+            <div class="lang-option active" data-lang="zh"><span class="flag">🇨🇳</span><span class="name">简体中文</span><span class="check">✓</span></div>
+            <div class="lang-option" data-lang="en"><span class="flag">🇺🇸</span><span class="name">English</span><span class="check">✓</span></div>
+            <div class="lang-option" data-lang="ja"><span class="flag">🇯🇵</span><span class="name">日本語</span><span class="check">✓</span></div>
+            <div class="lang-option" data-lang="ko"><span class="flag">🇰🇷</span><span class="name">한국어</span><span class="check">✓</span></div>
+            <div class="lang-option" data-lang="es"><span class="flag">🇪🇸</span><span class="name">Español</span><span class="check">✓</span></div>
+            <div class="lang-option" data-lang="fr"><span class="flag">🇫🇷</span><span class="name">Français</span><span class="check">✓</span></div>
+            <div class="lang-option" data-lang="de"><span class="flag">🇩🇪</span><span class="name">Deutsch</span><span class="check">✓</span></div>
+            <div class="lang-option" data-lang="pt"><span class="flag">🇧🇷</span><span class="name">Português</span><span class="check">✓</span></div>
+          </div>
+        </div>
       </div>
     </div>
   </header>
@@ -154,7 +171,7 @@
   </main>
 
   <footer class="foot">
-    <span>绘光 · AI 创作引擎 <span id="footEngine">（AI 接口）</span> — 接入 Agnes AI · 生成结果可下载</span>
+    <span data-i18n="footerText">绘光 · AI 创作引擎 — 接入 Agnes AI · 生成结果可下载</span>
   </footer>
 
 </div>
@@ -218,6 +235,7 @@
 <script src="js/art.js"></script>
 <script src="js/agnes.js"></script>
 <script src="js/storage.js"></script>
+<script src="js/i18n.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

@@ -2,6 +2,7 @@
  * app.js — 绘光 · 应用控制器
  * 模式：文生图 t2i / 图生图 i2i / 文生视频 t2v / 图生视频 i2v
  * 引擎：Agnes AI（默认）或本地预览引擎（离线回退）
+ * 多语言：zh / en / ja / ko / es / fr / de / pt
  * ============================================================ */
 (function () {
   'use strict';
@@ -10,50 +11,50 @@
   var $$ = function (s) { return Array.prototype.slice.call(document.querySelectorAll(s)); };
   var sleep = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
 
-  /* ---------- 文案与定义 ---------- */
-  var EXAMPLES = {
-    t2i: [
-      '一只银白色的机械狐狸，站在霓虹雨夜的城市天台，赛博朋克氛围',
-      '海边的日落，粉色与橘色天空，远处一艘小船缓缓归航',
-      '童话森林里发光的蘑菇，薄雾弥漫，梦幻氛围',
-      '中国水墨山水，云雾缭绕，孤舟蓑笠翁，留白意境',
-      '超高清的猫咪肖像，毛绒质感，柔和影棚光'
-    ],
-    i2i: [
-      '把参考图改成油画质感，色调更温暖',
-      '把参考图放在清晨的雾中，光从侧面洒进来',
-      '保持主体不变，背景换成赛博朋克城市夜景',
-      '把参考图改成动漫风格，色彩鲜亮'
-    ],
-    t2v: [
-      '一只海鸥低空掠过金色海面，浪花翻涌，黄昏光线',
-      '航拍城市天际线，云层流动，黄昏金色时刻',
-      '晨光穿透森林，雾气缓缓在山谷中散开',
-      '云海之上，一轮巨大的星球缓缓升起，史诗感'
-    ],
-    i2v: [
-      '让参考图中的主体缓缓转头，背景水流开始流动',
-      '镜头从参考图缓缓拉近，阳光逐渐照亮画面',
-      '让海面动起来，浪花轻轻拍打，风吹过画面',
-      '参考图场景缓慢推进，晨雾慢慢散开'
-    ]
-  };
+  /* ---------- 多语言初始化 ---------- */
+  var _lang = I18N.getLang();
+  function setLang(code) {
+    if (!I18N.setLang(code)) return;
+    _lang = code;
+    document.documentElement.lang = code === 'zh' ? 'zh-Hans' : code;
+    // 更新语言按钮显示
+    var langData = I18N.LANGUAGES.find(function (l) { return l.code === code; }) || I18N.LANGUAGES[0];
+    $('#langFlag').textContent = langData.flag;
+    $('#langCode').textContent = code === 'zh' ? '中' : code === 'en' ? 'EN' : code === 'ja' ? '日' : code === 'ko' ? '韩' : code.toUpperCase();
+    // 更新激活状态
+    $$('#langDropdown .lang-option').forEach(function (opt) {
+      opt.classList.toggle('active', opt.getAttribute('data-lang') === code);
+    });
+    // 重新渲染所有动态文本
+    renderModeSwitch();
+    renderCreator();
+    if (state.view === 'history') renderHistory();
+    renderTopbar();
+    renderStage();
+    translateStatic();
+    // 如果有弹窗打开，也更新
+    if (!$('#settingsModal').classList.contains('is-hidden')) openSettings();
+  }
+  function toggleLangDropdown() {
+    var dd = $('#langDropdown');
+    var btn = $('#langBtn');
+    dd.classList.toggle('open');
+    btn.classList.toggle('open');
+  }
 
-  var STYLES = ['写实', '动漫', '电影感', '插画', '3D'];
-  var STYLE_SUFFIX = {
-    '写实': '写实摄影风格，细节真实，自然光影',
-    '动漫': '日本动漫风格，线条清晰，色彩明快',
-    '电影感': '电影级质感，胶片色调，cinematic lighting',
-    '插画': '精美手绘插画风格，柔和色调',
-    '3D': '高清 3D 渲染风格，体积光影，精致材质'
-  };
-  var CAMERAS = ['静止', '推进', '拉远', '环绕', '跟随'];
-  var CAMERA_TAIL = {
-    '静止': '',
-    '推进': '镜头缓慢向前推进，画面逐渐接近主体',
-    '拉远': '镜头缓慢向后拉远，逐渐展现全景',
-    '环绕': '镜头围绕主体缓缓环绕旋转',
-    '跟随': '镜头跟随主体平稳移动'
+  /* ---------- 文案与定义（使用 i18n）---------- */
+  var EXAMPLES = I18N.D['zh'].examples;
+  var STYLES = I18N.D['zh'].styleLabels;
+  var STYLE_SUFFIX = {};
+  I18N.D['zh'].styleSuffixes.forEach(function (s, i) { STYLE_SUFFIX[STYLES[i]] = s; });
+  var CAMERAS = I18N.D['zh'].cameraLabels;
+  var CAMERA_TAIL = {};
+  I18N.D['zh'].cameraTails.forEach(function (c, i) { CAMERA_TAIL[CAMERAS[i]] = c; });
+  var PLACEHOLDERS = {
+    t2i: I18N.D['zh'].placeholderImage,
+    i2i: I18N.D['zh'].placeholderImg2Img,
+    t2v: I18N.D['zh'].placeholderVideo,
+    i2v: I18N.D['zh'].placeholderImg2Vid
   };
 
   var MODES = {
@@ -212,11 +213,18 @@
     $('#quotaPill').classList.toggle('low', q <= Math.max(0, Math.min(ql, 5)));
     if (q === 0) $('#quotaPill').classList.add('zero');
     else $('#quotaPill').classList.remove('zero');
-    $('#footEngine').textContent = state.config.engine === 'ai' ? '（AI 接口 · Agnes）' : '（本地演示）';
+    $('#quotaPill').title = I18N.t('quotaLabel');
+    var engineText = state.config.engine === 'ai' ? '（AI 接口 · Agnes）' : '（本地演示）';
+    var footerText = I18N.t('footerText');
+    $('#footEngine').textContent = engineText;
   }
   function renderModeSwitch() {
+    var modeMap = { t2i: 'navImage', i2i: 'navImg2Img', t2v: 'navVideo', i2v: 'navImg2Vid' };
     $$('#modeSwitch .mode-btn').forEach(function (b) {
       b.setAttribute('aria-selected', String(b.getAttribute('data-mode') === state.mode));
+      var mode = b.getAttribute('data-mode');
+      var key = modeMap[mode];
+      if (key && I18N.D[_lang] && I18N.D[_lang][key]) b.textContent = I18N.D[_lang][key];
     });
   }
 
@@ -230,9 +238,16 @@
     var mm = m(), isImg = mm.out === 'image';
     var p = state.params;
 
-    $('#promptLabel').textContent = mm.needsImage ? '画面描述' : (isImg ? '画面描述' : '视频描述');
+    $('#promptLabel').textContent = I18N.t('labelPrompt');
     $('#promptInput').placeholder = PLACEHOLDERS[state.mode];
-    $('#genLabel').textContent = isImg ? '生成图片' : '生成视频';
+    $('#genLabel').textContent = isImg ? I18N.t('btnGenImage') : I18N.t('btnGenVideo');
+    $('#genHint').textContent = I18N.t('hintGen');
+    $('#optimizeBtn').innerHTML = I18N.t('labelOptimize');
+    var examplesHead = document.querySelector('.examples-head');
+    if (examplesHead) {
+      examplesHead.innerHTML = '<span class="eyebrow">' + I18N.t('labelExamples') + '</span>' +
+        '<button class="link-btn" id="shuffleExample" data-action="shuffle-example">' + I18N.t('btnShuffle') + '</button>';
+    }
 
     // 分辨率档位（图片模式才显示；视频接口固定 720P，无此选项）
     var resList = mm.resolutions || ['1K'];
@@ -1393,6 +1408,25 @@
   }
 
   function bind() {
+    // 语言选择器
+    $('#langBtn').addEventListener('click', function (e) {
+      e.stopPropagation();
+      toggleLangDropdown();
+    });
+    document.addEventListener('click', function (e) {
+      if (!e.target.closest('#langSelector')) {
+        $('#langDropdown').classList.remove('open');
+        $('#langBtn').classList.remove('open');
+      }
+    });
+    $('#langDropdown').addEventListener('click', function (e) {
+      var opt = e.target.closest('.lang-option');
+      if (!opt) return;
+      var code = opt.getAttribute('data-lang');
+      setLang(code);
+      $('#langDropdown').classList.remove('open');
+      $('#langBtn').classList.remove('open');
+    });
     // 模式切换：无论是切换模式还是在历史页点击，都回到创作页
     $('#modeSwitch').addEventListener('click', function (e) {
       var b = e.target.closest('[data-mode]');
@@ -1578,10 +1612,19 @@
     renderModeSwitch();
     renderCreator();
     renderTopbar();
+    translateStatic();
     renderStage();
     Store.getAll().then(function (list) {
       state.history = list;
       if (state.view === 'history') renderHistory();
+    });
+  }
+
+  function translateStatic() {
+    $$('[data-i18n]').forEach(function (el) {
+      var key = el.getAttribute('data-i18n');
+      var text = I18N.t(key);
+      if (text) el.textContent = text;
     });
   }
 
