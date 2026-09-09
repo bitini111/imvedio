@@ -1,0 +1,16 @@
+{
+  "name": "imvedio",
+  "version": "1.0.0",
+  "description": "绘光 Halo - AI 文生图/图生图/文生视频/图生视频创作应用，基于 Agnes AI",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": ["ai", "image-generation", "video-generation", "agnes-ai", "canvas", "webapp"],
+  "author": "bitini111",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

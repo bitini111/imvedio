@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>绘光 · AI 文生图 / 图生图 / 文生视频 / 图生视频</title>
+<meta name="description" content="一句话或一张图，轻松生成图片和视频。">
+<link rel="stylesheet" href="css/style.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%236C7AFF'/%3E%3Cstop offset='1' stop-color='%234DD8C6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8' fill='url(%23g)'/%3E%3Ctext x='16' y='23' font-family='sans-serif' font-size='20' font-weight='700' text-anchor='middle' fill='%230A0C14'%3E✦%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+
+<div class="app">
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">✦</span>
+        <span class="brand-name">绘光</span>
+        <span class="brand-tag">AI 创作</span>
+      </div>
+
+      <nav class="mode-switch" id="modeSwitch" role="tablist" aria-label="创作模式" aria-orientation="horizontal">
+        <button class="mode-btn" data-action="set-mode" data-mode="t2i">文生图</button>
+        <button class="mode-btn" data-action="set-mode" data-mode="i2i">图生图</button>
+        <button class="mode-btn" data-action="set-mode" data-mode="t2v">文生视频</button>
+        <button class="mode-btn" data-action="set-mode" data-mode="i2v">图生视频</button>
+      </nav>
+
+      <div class="top-actions">
+        <div class="quota" id="quotaPill" title="剩余生成次数">
+          <span class="quota-bolt" aria-hidden="true">⚡</span>
+          <span id="quotaNum">–</span><span class="quota-unit">次</span>
+          <button class="quota-add" id="quotaAdd" title="增加生成次数（演示）">＋</button>
+        </div>
+        <button class="icon-btn" id="settingsBtn" title="生成 AI 设置" aria-label="设置">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span>设置</span>
+        </button>
+        <button class="icon-btn" id="historyBtn" data-action="open-history" aria-label="历史记录">
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 7v5l3 2"/></svg>
+          <span>历史</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main">
+
+    <!-- ================= 创作页 ================= -->
+    <section class="create-view" id="createView">
+
+      <aside class="creator">
+        <div class="field">
+          <label class="field-label" for="promptInput">
+            <span id="promptLabel">画面描述</span>
+            <button class="link-btn" id="optimizeBtn" data-action="optimize-prompt" title="用 AI 把描述润色得更适合生成">
+              ✨ 自动优化描述
+            </button>
+          </label>
+          <div class="prompt-box">
+            <textarea id="promptInput" rows="3" maxlength="500"
+              placeholder="描述你想要的画面，越具体越好…"></textarea>
+            <span class="prompt-count" id="promptCount">0 / 500</span>
+          </div>
+          <div class="examples">
+            <div class="examples-head">
+              <span class="eyebrow">试试这些灵感</span>
+              <button class="link-btn" id="shuffleExample" data-action="shuffle-example">换一批 ↻</button>
+            </div>
+            <div class="example-chips" id="exampleChips"></div>
+          </div>
+        </div>
+
+        <!-- 参考图片（图生图 / 图生视频） -->
+        <div class="upload-panel is-hidden" id="uploadPanel">
+          <span class="eyebrow" id="uploadLabel">参考图片</span>
+          <div class="upload-row">
+            <div class="upload-zone" id="uploadZone" role="button" tabindex="0" aria-label="上传参考图片">
+              <span class="uz-icon" aria-hidden="true">⬆</span>
+              <span id="uploadZoneText">点击或拖拽上传</span>
+            </div>
+            <div class="upload-thumbs" id="uploadThumbs"></div>
+          </div>
+          <input type="file" id="fileInput" accept="image/*" multiple class="is-hidden">
+          <p class="upload-hint" id="uploadHint"></p>
+        </div>
+
+        <div class="params">
+          <div class="param-group" id="resolutionGroup">
+            <span class="eyebrow">分辨率</span>
+            <div class="seg" id="resolutionSeg" role="group" aria-label="分辨率"></div>
+          </div>
+
+          <div class="param-group">
+            <span class="eyebrow">画面比例</span>
+            <div class="seg seg-wrap" id="ratioSeg" role="group" aria-label="画面比例"></div>
+          </div>
+
+          <div class="param-group" id="styleGroup">
+            <span class="eyebrow">风格</span>
+            <div class="seg seg-wrap" id="styleSeg" role="group" aria-label="风格"></div>
+          </div>
+
+          <div class="param-group" id="countGroup">
+            <span class="eyebrow">生成数量</span>
+            <div class="seg" id="countSeg" role="group" aria-label="生成数量"></div>
+          </div>
+
+          <div class="param-group is-hidden" id="durationGroup">
+            <span class="eyebrow">视频时长</span>
+            <div class="seg" id="durationSeg" role="group" aria-label="视频时长"></div>
+          </div>
+
+          <div class="param-group is-hidden" id="cameraGroup">
+            <span class="eyebrow">镜头运镜</span>
+            <div class="seg seg-wrap" id="cameraSeg" role="group" aria-label="镜头运镜"></div>
+          </div>
+        </div>
+
+        <button class="gen-btn" id="genBtn">
+          <span class="gen-icon" aria-hidden="true">✦</span>
+          <span class="gen-label" id="genLabel">生成图片</span>
+        </button>
+        <p class="gen-hint" id="genHint">本次创作将消耗 1 次生成机会</p>
+      </aside>
+
+      <section class="stage" id="stage" aria-live="polite">
+        <!-- 空状态 / 生成中 / 结果 由 JS 渲染 -->
+      </section>
+
+    </section>
+
+    <!-- ================= 历史记录页 ================= -->
+    <section class="history-view is-hidden" id="historyView">
+      <div class="history-head">
+        <div class="history-title">
+          <button class="icon-btn back-btn" data-action="back-to-create" aria-label="返回创作">
+            <span class="back-arrow" aria-hidden="true">←</span>
+            <span>返回创作</span>
+          </button>
+          <h1>历史记录</h1>
+          <p class="muted">你的每一次创作都会自动保存在这里</p>
+        </div>
+        <div class="seg" id="historyFilter" role="group" aria-label="筛选类型">
+          <button class="seg-btn" data-filter="all" aria-pressed="true">全部</button>
+          <button class="seg-btn" data-filter="image" aria-pressed="false">图片</button>
+          <button class="seg-btn" data-filter="video" aria-pressed="false">视频</button>
+        </div>
+      </div>
+      <div class="history-grid" id="historyGrid"></div>
+    </section>
+
+  </main>
+
+  <footer class="foot">
+    <span>绘光 · AI 创作引擎 <span id="footEngine">（AI 接口）</span> — 接入 Agnes AI · 生成结果可下载</span>
+  </footer>
+
+</div>
+
+<!-- 生成 AI 设置弹窗 -->
+<div class="lightbox is-hidden" id="settingsModal" role="dialog" aria-modal="true" aria-label="生成 AI 设置">
+  <button class="lightbox-close" data-action="close-settings" aria-label="关闭">✕</button>
+  <div class="settings-panel">
+    <h2 class="sp-title">生成 AI 设置</h2>
+
+    <div class="sp-field">
+      <span class="sp-label">生成引擎</span>
+      <div class="seg" id="engineSeg">
+        <button class="seg-btn" data-engine="ai">AI 接口</button>
+        <button class="seg-btn" data-engine="local">本地演示</button>
+      </div>
+      <p class="sp-hint">AI 接口：调用 Agnes AI 真实生成；本地演示：无需网络，用内置引擎生成（便于离线演示）。</p>
+    </div>
+
+    <div class="sp-field">
+      <span class="sp-label">API 密钥</span>
+      <input type="password" class="sp-input" id="apiKeyInput" autocomplete="off" spellcheck="false"
+        placeholder="sk-…">
+      <p class="sp-hint">默认已填入你的密钥。密钥仅保存在本机浏览器中。</p>
+    </div>
+
+    <div class="sp-field">
+      <span class="sp-label">每日生成次数上限</span>
+      <input type="number" class="sp-input" id="quotaLimitInput" min="1" max="99999" value="1000"
+        placeholder="1000">
+      <p class="sp-hint">超出上限后点击「生成」会提示次数用尽。修改会即时生效，若当前已用额度超过新上限会自动截断至新上限。</p>
+    </div>
+
+    <div class="sp-field">
+      <span class="sp-label">视频接口</span>
+      <div class="seg" id="videoModelSeg">
+        <button class="seg-btn" data-vmodel="agnes-video-2.5-flash">2.5 Flash</button>
+        <button class="seg-btn" data-vmodel="agnes-video-v2.0">V2.0</button>
+      </div>
+      <p class="sp-hint">「2.5 Flash」新建、支持多图参考；「V2.0」兼容旧接口。两者单次均限约 12–18 秒，30 秒 / 1 分钟会拆成多段生成。</p>
+    </div>
+
+    <div class="sp-actions">
+      <button class="mini-btn" id="testConnBtn">测试连接</button>
+      <span class="sp-flex"></span>
+      <button class="mini-btn" id="saveCfgBtn">保存设置</button>
+    </div>
+  </div>
+</div>
+
+<!-- 图片放大 / 视频详情 弹层 -->
+<div class="lightbox is-hidden" id="lightbox" role="dialog" aria-modal="true" aria-label="预览">
+  <button class="lightbox-close" data-action="close-lightbox" aria-label="关闭">✕</button>
+  <div class="lightbox-body" id="lightboxBody"></div>
+</div>
+
+<!-- 自定义提示气泡 -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script src="js/rng.js"></script>
+<script src="js/art.js"></script>
+<script src="js/agnes.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
