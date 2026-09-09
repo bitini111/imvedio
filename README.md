@@ -3,7 +3,7 @@
 基于 Agnes AI 的四模式创作应用。输入一句提示词，或加上传参图片，即可生成图片和短视频，可下载、有历史记录、支持配额管理。零依赖、可直接双击打开，也可启动 Node 服务器获得完整的 API 同源代理能力。
 
 <p align="center">
-  <img src="public/homepage.png" alt="绘光 Halo 界面截图" width="800">
+  <img src="https://raw.githubusercontent.com/bitini111/imvedio/main/homepage.png" alt="绘光 Halo 界面截图" width="800">
 </p>
 
 ## 特性一览
