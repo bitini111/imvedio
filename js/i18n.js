@@ -1258,12 +1258,23 @@
     }
     if (val === undefined) return key;
     if (!vars) return val;
-    // 替换 %n, %d, %s, %e, %D, %N 等占位符
-    return String(val).replace(/%(.)/g, function (match, p1) {
-      var idx = 'ndefsDES'.indexOf(p1);
-      if (idx < 0 || idx >= (vars.length || 0)) return match;
-      return String(vars[idx]);
-    });
+
+    var str = String(val);
+
+    if (Array.isArray(vars)) {
+      // 数组：先替换数字索引 %0, %1, %2...
+      vars.forEach(function (v, i) {
+        str = str.replace(new RegExp('%' + i, 'g'), String(v));
+      });
+      // 再替换类型化占位符 %d, %s, %n（按顺序取前3个元素）
+      str = str.replace(/%d/g, vars[0] !== undefined ? String(vars[0]) : '%d');
+      str = str.replace(/%s/g, vars[1] !== undefined ? String(vars[1]) : '%s');
+      str = str.replace(/%n/g, vars[2] !== undefined ? String(vars[2]) : '%n');
+    } else {
+      // 单个值：替换所有 %d, %s, %n
+      str = str.replace(/%[dsn]/g, String(vars));
+    }
+    return str;
   }
 
   function setLang(code) {
