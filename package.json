@@ -7,10 +7,20 @@
     "start": "node server.js",
     "dev": "node server.js"
   },
-  "keywords": ["ai", "image-generation", "video-generation", "agnes-ai", "canvas", "webapp"],
+  "keywords": [
+    "ai",
+    "image-generation",
+    "video-generation",
+    "agnes-ai",
+    "canvas",
+    "webapp"
+  ],
   "author": "bitini111",
   "license": "MIT",
   "engines": {
     "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "puppeteer": "^25.10.0"
   }
 }
