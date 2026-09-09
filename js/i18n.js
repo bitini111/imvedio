@@ -130,7 +130,7 @@
       segCount: '%d 张',
       countSeg: '片段 %d/%n',
       imgCount: '%d 张',
-      imgCountSingular: '1 张',
+      imgCountOne: '1 张',
       imgCountPlural: '%d 张',
       secLabel: '%d 秒',
       minLabel: '1 分钟',
