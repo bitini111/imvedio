@@ -30,12 +30,12 @@
       <div class="top-actions">
         <div class="quota" id="quotaPill" title="剩余生成次数">
           <span class="quota-bolt" aria-hidden="true">⚡</span>
-          <span id="quotaNum">–</span><span class="quota-unit">次</span>
+          <span id="quotaNum">–</span><span class="quota-unit" data-i18n="quotaLabel">次</span>
           <button class="quota-add" id="quotaAdd" title="增加生成次数（演示）">＋</button>
         </div>
         <button class="icon-btn" id="settingsBtn" title="生成 AI 设置" aria-label="设置">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-          <span>设置</span>
+          <span data-i18n="btnSettings">设置</span>
         </button>
         <button class="icon-btn" id="historyBtn" data-action="open-history" aria-label="历史记录">
           <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 7v5l3 2"/></svg>
@@ -154,15 +154,15 @@
         <div class="history-title">
           <button class="icon-btn back-btn" data-action="back-to-create" aria-label="返回创作">
             <span class="back-arrow" aria-hidden="true">←</span>
-            <span>返回创作</span>
+            <span data-i18n="btnBack">返回创作</span>
           </button>
-          <h1>历史记录</h1>
-          <p class="muted">你的每一次创作都会自动保存在这里</p>
+          <h1 data-i18n="historyTitle">历史记录</h1>
+          <p class="muted" data-i18n="historySub">你的每一次创作都会自动保存在这里</p>
         </div>
         <div class="seg" id="historyFilter" role="group" aria-label="筛选类型">
-          <button class="seg-btn" data-filter="all" aria-pressed="true">全部</button>
-          <button class="seg-btn" data-filter="image" aria-pressed="false">图片</button>
-          <button class="seg-btn" data-filter="video" aria-pressed="false">视频</button>
+          <button class="seg-btn" data-filter="all" aria-pressed="true" data-i18n="filterAll">全部</button>
+          <button class="seg-btn" data-filter="image" aria-pressed="false" data-i18n="filterImage">图片</button>
+          <button class="seg-btn" data-filter="video" aria-pressed="false" data-i18n="filterVideo">视频</button>
         </div>
       </div>
       <div class="history-grid" id="historyGrid"></div>
@@ -172,6 +172,7 @@
 
   <footer class="foot">
     <span data-i18n="footerText">绘光 · AI 创作引擎 — 接入 Agnes AI · 生成结果可下载</span>
+    <span id="footEngine" style="margin-left:12px;color:var(--text-3);font-size:11px;"></span>
   </footer>
 
 </div>
@@ -180,44 +181,44 @@
 <div class="lightbox is-hidden" id="settingsModal" role="dialog" aria-modal="true" aria-label="生成 AI 设置">
   <button class="lightbox-close" data-action="close-settings" aria-label="关闭">✕</button>
   <div class="settings-panel">
-    <h2 class="sp-title">生成 AI 设置</h2>
+    <h2 class="sp-title" data-i18n="settingTitle">生成 AI 设置</h2>
 
     <div class="sp-field">
-      <span class="sp-label">生成引擎</span>
+      <span class="sp-label" data-i18n="settingEngine">生成引擎</span>
       <div class="seg" id="engineSeg">
         <button class="seg-btn" data-engine="ai">AI 接口</button>
         <button class="seg-btn" data-engine="local">本地演示</button>
       </div>
-      <p class="sp-hint">AI 接口：调用 Agnes AI 真实生成；本地演示：无需网络，用内置引擎生成（便于离线演示）。</p>
+      <p class="sp-hint" data-i18n="hintEngine">AI 接口：调用 Agnes AI 真实生成；本地演示：无需网络，用内置引擎生成（便于离线演示）。</p>
     </div>
 
     <div class="sp-field">
-      <span class="sp-label">API 密钥</span>
+      <span class="sp-label" data-i18n="settingApi">API 密钥</span>
       <input type="password" class="sp-input" id="apiKeyInput" autocomplete="off" spellcheck="false"
         placeholder="sk-…">
-      <p class="sp-hint">默认已填入你的密钥。密钥仅保存在本机浏览器中。</p>
+      <p class="sp-hint" data-i18n="hintApiKey">默认已填入你的密钥。密钥仅保存在本机浏览器中。</p>
     </div>
 
     <div class="sp-field">
-      <span class="sp-label">每日生成次数上限</span>
+      <span class="sp-label" data-i18n="settingQuotaLimit">每日生成次数上限</span>
       <input type="number" class="sp-input" id="quotaLimitInput" min="1" max="99999" value="1000"
         placeholder="1000">
-      <p class="sp-hint">超出上限后点击「生成」会提示次数用尽。修改会即时生效，若当前已用额度超过新上限会自动截断至新上限。</p>
+      <p class="sp-hint" data-i18n="hintQuota">超出上限后点击「生成」会提示次数用尽。修改会即时生效，若当前已用额度超过新上限会自动截断至新上限。</p>
     </div>
 
     <div class="sp-field">
-      <span class="sp-label">视频接口</span>
+      <span class="sp-label" data-i18n="settingVideoModel">视频接口</span>
       <div class="seg" id="videoModelSeg">
         <button class="seg-btn" data-vmodel="agnes-video-2.5-flash">2.5 Flash</button>
         <button class="seg-btn" data-vmodel="agnes-video-v2.0">V2.0</button>
       </div>
-      <p class="sp-hint">「2.5 Flash」新建、支持多图参考；「V2.0」兼容旧接口。两者单次均限约 12–18 秒，30 秒 / 1 分钟会拆成多段生成。</p>
+      <p class="sp-hint" data-i18n="hintVideoModel">「2.5 Flash」新建、支持多图参考；「V2.0」兼容旧接口。两者单次均限约 12–18 秒，30 秒 / 1 分钟会拆成多段生成。</p>
     </div>
 
     <div class="sp-actions">
-      <button class="mini-btn" id="testConnBtn">测试连接</button>
+      <button class="mini-btn" id="testConnBtn" data-i18n="btnTestConn">测试连接</button>
       <span class="sp-flex"></span>
-      <button class="mini-btn" id="saveCfgBtn">保存设置</button>
+      <button class="mini-btn" id="saveCfgBtn" data-i18n="btnSaveCfg">保存设置</button>
     </div>
   </div>
 </div>

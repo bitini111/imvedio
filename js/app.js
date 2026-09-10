@@ -32,6 +32,9 @@
     renderTopbar();
     renderStage();
     translateStatic();
+    renderExamples();
+    // 清空示例顺序缓存，确保切换语言后重新读取当前语言的示例
+    _exampleOrder = {};
     // 如果有弹窗打开，也更新
     if (!$('#settingsModal').classList.contains('is-hidden')) openSettings();
   }
@@ -42,8 +45,9 @@
     btn.classList.toggle('open');
   }
 
-  /* ---------- 文案与定义（使用 i18n）---------- */
-  var EXAMPLES = I18N.D['zh'].examples;
+  /* ---------- 文案与定义（使用当前语言）---------- */
+  function getExamples() { return (I18N.D[_lang] || I18N.D['zh']).examples; }
+  var EXAMPLES = getExamples();
   var STYLES = I18N.D['zh'].styleLabels;
   var STYLE_SUFFIX = {};
   I18N.D['zh'].styleSuffixes.forEach(function (s, i) { STYLE_SUFFIX[STYLES[i]] = s; });
@@ -207,16 +211,13 @@
   /* ---------- 顶栏 ---------- */
   function renderTopbar() {
     var q = Store.getQuota(), ql = Store.getQuotaLimit();
-    state.quota = q;
-    state.quotaLimit = ql;
     $('#quotaNum').textContent = q + '/' + ql;
     $('#quotaPill').classList.toggle('low', q <= Math.max(0, Math.min(ql, 5)));
     if (q === 0) $('#quotaPill').classList.add('zero');
     else $('#quotaPill').classList.remove('zero');
     $('#quotaPill').title = I18N.t('quotaLabel');
-    var engineText = state.config.engine === 'ai' ? '（AI 接口 · Agnes）' : '（本地演示）';
-    var footerText = I18N.t('footerText');
-    $('#footEngine').textContent = engineText;
+    var engineKey = state.config.engine === 'ai' ? 'engineAI' : 'engineLocal';
+    if ($('#footEngine')) $('#footEngine').textContent = ' ' + I18N.t(engineKey);
   }
   function renderModeSwitch() {
     var modeMap = { t2i: 'navImage', i2i: 'navImg2Img', t2v: 'navVideo', i2v: 'navImg2Vid' };
@@ -376,7 +377,7 @@
   var _exampleOrder = {};
   function renderExamples() {
     var chips = $('#exampleChips');
-    var arr = EXAMPLES[state.mode];
+    var arr = getExamples()[state.mode];
     if (!_exampleOrder[state.mode]) _exampleOrder[state.mode] = arr.slice();
     var list = _exampleOrder[state.mode];
     chips.innerHTML = list.map(function (t, i) {
@@ -384,7 +385,7 @@
     }).join('');
   }
   function shuffleExamples() {
-    var arr = EXAMPLES[state.mode].slice();
+    var arr = getExamples()[state.mode].slice();
     for (var i = arr.length - 1; i > 0; i--) {
       var j = Math.floor(Math.random() * (i + 1));
       var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
@@ -474,20 +475,21 @@
     return (
       '<div class="stage-empty">' +
         '<div class="aperture"><span class="aperture-icon">✦</span></div>' +
-        '<h2>' + (mm.needsImage ? '上传一张图，让它动起来' : '描述你想要的画面') + '</h2>' +
-        '<p>一句提示词' + (mm.needsImage ? '＋一张参考图' : '') + '，生成' + (mm.out === 'image' ? '图片' : '短视频') + '</p>' +
-        '<span class="cta-hint">← ' + (mm.needsImage ? '上传参考图并输入描述后' : '输入提示词后') + '，点击「生成</span>'
-    ) + '</div>';
+        '<h2>' + I18N.t('emptyTitle') + '</h2>' +
+        '<p>' + I18N.t('emptyDesc') + '</p>' +
+        '<span class="cta-hint">' + I18N.t('emptyHint') + '</span>' +
+      '</div>'
+    );
   }
 
   function emptyProgress() {
     return (
       '<div class="gen-progress" id="genProgress">' +
         '<div class="progress-aura"><div class="aura-core">0%</div></div>' +
-        '<p class="gen-phase" id="genPhase">正在准备…</p>' +
+        '<p class="gen-phase" id="genPhase">' + I18N.t('phasePreparing') + '</p>' +
         '<p class="gen-eta" id="genEta"></p>' +
         '<div class="gen-bar"><i id="genBarFill"></i></div>' +
-        '<button class="cancel-btn" data-action="cancel-gen">取消生成</button>' +
+        '<button class="cancel-btn" data-action="cancel-gen">' + I18N.t('btnCancel') + '</button>' +
       '</div>'
     );
   }
@@ -505,12 +507,12 @@
     return (
       '<div class="gen-progress">' +
         '<div class="progress-aura"><div class="aura-core" style="color:#ff8c98">!</div></div>' +
-        '<p class="gen-phase">生成失败了</p>' +
-        '<p class="gen-eta" style="font-family:inherit;color:var(--text-2);max-width:420px;line-height:1.6">' + escapeHtml(run.error || '出现未知错误，请重试。') + '</p>' +
+        '<p class="gen-phase">' + I18N.t('errTitle') + '</p>' +
+        '<p class="gen-eta" style="font-family:inherit;color:var(--text-2);max-width:420px;line-height:1.6">' + escapeHtml(run.error || I18N.t('errDetail')) + '</p>' +
         '<div style="display:flex;gap:10px;margin-top:6px">' +
-          '<button class="mini-btn primary" data-action="retry-gen">重试</button>' +
-          '<button class="mini-btn" data-action="local-demo">用本地演示跑一遍</button>' +
-          '<button class="mini-btn" data-action="clear-run">返回</button>' +
+          '<button class="mini-btn primary" data-action="retry-gen">' + I18N.t('btnRetry') + '</button>' +
+          '<button class="mini-btn" data-action="local-demo">' + I18N.t('btnLocalDemo') + '</button>' +
+          '<button class="mini-btn" data-action="clear-run">' + I18N.t('btnClear') + '</button>' +
         '</div>' +
       '</div>'
     );
@@ -570,16 +572,17 @@
   }
 
   function resultBar(run) {
+    var modeNavKey = { t2i: 'navImage', i2i: 'navImg2Img', t2v: 'navVideo', i2v: 'navImg2Vid' };
     return (
       '<div class="result-bar">' +
         '<div class="result-prompt">' +
-          '<span class="kicker">' + MODES[run.kind].label + '</span>' +
+          '<span class="kicker">' + I18N.t(modeNavKey[run.kind] || 'navImage') + '</span>' +
           '<span class="text">' + escapeHtml(run.prompt) + '</span>' +
         '</div>' +
         '<div class="result-params">' + chipsOf(run) + '</div>' +
         '<div class="result-actions">' +
-          '<button class="mini-btn" data-action="remix-prompt">继续修改</button>' +
-          '<button class="mini-btn primary" data-action="redo-run">再生成一组</button>' +
+          '<button class="mini-btn" data-action="remix-prompt">' + I18N.t('btnRemix') + '</button>' +
+          '<button class="mini-btn primary" data-action="redo-run">' + I18N.t('btnRegen') + '</button>' +
         '</div>' +
       '</div>'
     );
@@ -681,6 +684,7 @@
 
   /* ---------- 历史记录 ---------- */
   function renderHistory() {
+    translateStatic();
     var grid = $('#historyGrid');
     var list = state.history.filter(function (r) {
       var kind = MODES[r.kind] ? MODES[r.kind].out : 'image';
@@ -693,9 +697,9 @@
       grid.innerHTML =
         '<div class="history-empty">' +
           '<div class="em">🎨</div>' +
-          '<h3>' + (state.history.length ? '这个分类下还没有记录' : '还没有创作记录') + '</h3>' +
-          '<p>' + (state.history.length ? '去生成一张图片或一段视频吧' : '你的每一次创作都会自动保存到这里') + '</p>' +
-          '<button class="go-create" data-action="go-create">开始创作</button>' +
+          '<h3>' + (state.history.length ? I18N.t('historyEmpty') : I18N.t('historyEmpty')) + '</h3>' +
+          '<p>' + (state.history.length ? I18N.t('historyEmptyDesc') : I18N.t('historyEmptyDesc')) + '</p>' +
+          '<button class="go-create" data-action="go-create">' + I18N.t('btnGoCreate') + '</button>' +
         '</div>';
       return;
     }
@@ -709,19 +713,20 @@
     var media = isImg
       ? '<img src="' + src + '" alt="">'
       : '<video src="' + src + '" muted playsinline preload="metadata"></video>';
+    var modeNavKey = { t2i: 'navImage', i2i: 'navImg2Img', t2v: 'navVideo', i2v: 'navImg2Vid' };
     return (
       '<div class="history-card" data-action="open-detail" data-id="' + r.id + '">' +
         '<div class="thumb">' + media +
-          '<span class="type-badge ' + r.kind + '">' + (isImg ? '图片' : '视频') + '</span>' +
-          '<span class="mode-now">' + MODES[r.kind].label + '</span>' +
+          '<span class="type-badge ' + r.kind + '">' + (isImg ? I18N.t('labelTypeImg') : I18N.t('labelTypeVideo')) + '</span>' +
+          '<span class="mode-now">' + I18N.t(modeNavKey[r.kind] || 'navImage') + '</span>' +
         '</div>' +
         '<div class="meta">' +
           '<p class="hp">' + escapeHtml(r.prompt) + '</p>' +
           '<div class="row">' +
             '<span class="when">' + Store.fmtWhen(r.createdAt) + '</span>' +
             '<span class="acts">' +
-              '<button data-action="regen-from-history" data-id="' + r.id + '" title="用同样的设置再生成一次">↻</button>' +
-              '<button class="del" data-action="delete-record" data-id="' + r.id + '" title="删除记录">✕</button>' +
+              '<button data-action="regen-from-history" data-id="' + r.id + '" title="' + I18N.t('labelTipRegen') + '">↻</button>' +
+              '<button class="del" data-action="delete-record" data-id="' + r.id + '" title="' + I18N.t('labelTipDelete') + '">✕</button>' +
             '</span>' +
           '</div>' +
         '</div>' +
@@ -742,8 +747,8 @@
         '<div class="lightbox-foot"><div class="info">' +
           '<p class="fp">' + escapeHtml(r.prompt) + '</p><div class="chips">' + chipsOf(r) + '</div></div>' +
           '<div class="acts">' +
-            '<button class="mini-btn" data-action="lb-download">下载图片</button>' +
-            '<button class="mini-btn primary" data-action="lb-regen">再次生成</button>' +
+            '<button class="mini-btn" data-action="lb-download">' + I18N.t('btnDownload') + '</button>' +
+            '<button class="mini-btn primary" data-action="lb-regen">' + I18N.t('btnRegen') + '</button>' +
           '</div></div>';
     } else {
       // 灯箱：视频内嵌播放器
@@ -755,8 +760,8 @@
         '<div class="lightbox-foot"><div class="info">' +
           '<p class="fp">' + escapeHtml(r.prompt) + '</p><div class="chips">' + chipsOf(r) + '</div></div>' +
           '<div class="acts">' +
-            '<button class="mini-btn" data-action="lb-download">下载视频</button>' +
-            '<button class="mini-btn primary" data-action="lb-regen">再次生成</button>' +
+            '<button class="mini-btn" data-action="lb-download">' + I18N.t('btnDownloadVideo') + '</button>' +
+            '<button class="mini-btn primary" data-action="lb-regen">' + I18N.t('btnRegen') + '</button>' +
           '</div></div>');
       var lv = mediaBox.querySelector('video.rv');
       if (lv) mountPlaylistPlayer(lv.parentElement, r);
@@ -1541,6 +1546,8 @@
       $('#videoModelSeg [data-vmodel="' + v + '"]').setAttribute('aria-pressed', String(cfg.videoModel === v));
     });
     $('#settingsModal').classList.remove('is-hidden');
+    // 翻译弹窗内容
+    translateStatic();
   }
   function closeSettings() {
     $('#settingsModal').classList.add('is-hidden');
