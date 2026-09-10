@@ -1277,6 +1277,8 @@
       uploadMulti: 'Clique ou arraste（máx %d imagens）',
       uploadZone: 'Clique ou arraste para carregar',
       btnCancel: 'Cancelar',
+      engineAI: '(Interface IA · Agnes)',
+      engineLocal: '(Demo local)',
       errTitle: 'Falha na geração',
       errDetail: 'Erro desconhecido, tente novamente.',
       labelTypeImg: 'Imagem',
