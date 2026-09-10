@@ -1218,7 +1218,7 @@
     p.then(function (out) {
       state.prompt = out;
       $('#promptInput').value = out;
-      $('#promptCount').textContent = out.length + ' / 500';
+      $('#promptCount').textContent = out.length + ' / 2048';
       toast('描述已优化', 'ok');
     }).catch(function (err) {
       toast('优化失败：' + ((err && err.message) || '网络错误'), 'err');
@@ -1234,7 +1234,7 @@
     var camera = MODES[mode].durations && state.params.camera && CAMERA_TAIL[state.params.camera]
       ? '，' + CAMERA_TAIL[state.params.camera] : '';
     return (text.replace(/[。，,\.\s]+$/, '') + '，高清画质，细节丰富，光影层次分明，构图讲究' +
-      deep + (style ? '，' + style : '') + camera).slice(0, 500);
+      deep + (style ? '，' + style : '') + camera).slice(0, 2048);
   }
 
   /* ---------- 下载 ---------- */
@@ -1275,7 +1275,7 @@
   function setPrompt(v) {
     state.prompt = v;
     $('#promptInput').value = v;
-    $('#promptCount').textContent = v.length + ' / 500';
+    $('#promptCount').textContent = v.length + ' / 2048';
   }
 
   function handleAction(act, e) {
@@ -1462,7 +1462,7 @@
     var ta = $('#promptInput');
     ta.addEventListener('input', function () {
       state.prompt = ta.value;
-      $('#promptCount').textContent = ta.value.length + ' / 500';
+      $('#promptCount').textContent = ta.value.length + ' / 2048';
     });
 
     // 分发参数点击
