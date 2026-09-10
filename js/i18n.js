@@ -162,6 +162,7 @@
       examples: {
         t2i: [
           '超真实,古风仙子,有着绝世容颜,身着嫩芽绿仙气袭皮长裙,头戴华丽的冰草绿色琉璃发饰头饰,高清,正脸高清人物特写,美若天仙,倾国倾城,妩媚,风情,慵懒,中式古典美人,苗疆女蛊王,头戴简单银饰,头发自然散落,如同瀑布般的长发及腰,耳挂大耳环,全局朦胧模糊效果,淡彩调暗光环境,曝光与失焦叠加,光影特效,超广角强透视构图,动态模糊边缘虚化,强烈胶片颗粒与高噪点质感,弥散晕染的暗部层次,夸张的人物轮廓,超现实景深控制,细节生动完美,8K级暗调摄影,红色人像摄影,日常快照风格,非精心构图或打光,神情忧郁妖冶少女,冷白皮,时尚穿搭,瓜子脸尖下巴,皮肤白皙,底妆通透,肤色均匀自然,纯欲风,发丝清晰可见,光线柔和自然,非均匀打光,表情自然松弛,照片毫无修饰感,带有生活真实感,ccd拍照感,iphone实拍,真人,真实生活,古风人像图,暗调背景,光线聚焦于人物,柔和又精致的氛围,色彩以黑白为主,白色服饰与黑色长发形成对比,搭配银色白色的发饰细节,主体是一位女性,长发用带有花朵珍珠流苏的古风发饰盘起,身着露肩的白色毛绒质感服饰,整体风格清冷又具古典柔美',
+          '超真实,古风仙子,有着绝世容颜,身着嫩芽绿仙气袭皮长裙,头戴华丽的冰草绿色琉璃发饰头饰,高清,正脸高清人物特写,美若天仙,倾国倾城,妩媚,风情,慵懒,中式古典美人,苗疆女蛊王,头戴简单银饰,头发自然散落,如同瀑布般的长发及腰,耳挂大耳环,全局朦胧模糊效果,淡彩调暗光环境,曝光与失焦叠加,光影特效,超广角强透视构图,动态模糊边缘虚化,强烈胶片颗粒与高噪点质感,弥散晕染的暗部层次,夸张的人物轮廓,超现实景深控制,细节生动完美,8K级暗调摄影,红色人像摄影,日常快照风格,非精心构图或打光,神情忧郁妖冶少女,冷白皮,时尚穿搭,瓜子脸尖下巴,皮肤白皙,底妆通透,肤色均匀自然,纯欲风,发丝清晰可见,光线柔和自然,非均匀打光,表情自然松弛,照片毫无修饰感,带有生活真实感,ccd拍照感,iphone实拍,真人,真实生活,古风人像图,暗调背景,光线聚焦于人物,柔和又精致的氛围,色彩以黑白为主,白色服饰与黑色长发形成对比,搭配银色白色的发饰细节,主体是一位女性,长发用带有花朵珍珠流苏的古风发饰盘起,身着露肩的白色毛绒质感服饰,整体风格清冷又具古典柔美',
           '海边的日落，粉色与橘色天空，远处一艘小船缓缓归航',
           '童话森林里发光的蘑菇，薄雾弥漫，梦幻氛围',
           '中国水墨山水，云雾缭绕，孤舟蓑笠翁，留白意境',
@@ -316,7 +317,7 @@
       ],
       examples: {
         t2i: [
-          'A silver mechanical fox standing on a neon rooftop in cyberpunk city at night',
+          'Ultra-realistic, ancient Chinese fairy maiden, peerless beauty, wearing sprout-green ethereal fur-trimmed long dress, ornate ice-grass green glass hair ornaments, bust, HD frontal portrait, heavenly beauty, enchanting, languid, classical Chinese beauty, Miao tribe gu queen, simple silver hair accessories, natural flowing hair to waist, large earrings, global hazy blur effect, soft dim lighting, exposure and defocus overlay, light effects, ultra-wide angle strong perspective, dynamic blur edge softening, strong film grain and high noise texture, diffused dark layer rendering, exaggerated figure outline, surreal depth of field, vivid perfect details, 8K dark-tone photography, red portrait photography, daily snapshot style, unrefined composition or lighting, melancholic bewitching girl, cool white skin, fashion outfit, melon-seed face pointed chin, fair translucent skin, pure desire style, clear visible hair strands, soft natural light, uneven lighting, natural relaxed expression, unretouched photo feel, authentic life sense, ccd photo feel, iphone real shot, real person, real life, ancient style portrait, dark background, light focused on subject, soft yet exquisite atmosphere, black and white color scheme, white clothing contrasted with black long hair, silver and white hair accessory details, female subject with hair piled using flower pearl tassel ancient hairpins, off-shoulder white furry textured clothing, overall style cold yet classically graceful',
           'Beach sunset, pink and orange sky, a small boat returning in the distance',
           'Glowing mushrooms in an enchanted forest, misty atmosphere',
           'Chinese ink wash painting of mountains and mist, lone boat, negative space',
@@ -471,7 +472,7 @@
       ],
       examples: {
         t2i: [
-          'ネオンに照らされた雨の夜、サイバーパンクな都市の屋上にある銀色の機械狐',
+          '超真實の古代中国の仙女、绝世的美貌、嫩芽緑の仙気漂う裘皮の長いドレスを身にまとい、華麗な氷草緑の琉璃髪飾りを头戴し、バスト、HD、正顔の高清人物肖像、天仙のように美しく、国を傾ける美貌、媚態、情熱、懒洋洋、中式古典美人、苗疆の女蛊王、简单的银饰を头戴し、髪は自然に编まれ、瀑布のような长い髪が腰まで达し、大きなイヤリングを挂け、全体が朦胧としたぼかし効果、淡彩调の暗い光环境、露光とボケが重なった光影特效、超广角强透视构图、动态模糊の边缘虚化、强烈なフィルム颗粒と高ノイズ质感、弥散晕染する暗部の层次、夸张した人物の轮廓、超现实的被写界深度控制、细节生动完美、8K級の暗调摄影、红色人像摄影、日常のスナップショットスタイル、精心でない构图や露光、忧いを帯びた妖艶な少女、冷たい白い皮肤、ファッションコーディネート、うり种子のような脸に尖ったあご、白く透き通る肌、透明感あるメーク、均一自然な肤色、纯欲风、发丝清晰可见、柔软な自然光、不均匀な照明、自然でリラックスした表情、修饰感のない写真、真实な生活感、ccd撮影感、iphone実写、本物の人物、真实な生活、古代風人像、暗调背景、光が人物に聚光し、柔软で精致な氛围、黒白を基调とした色彩、白い衣装と黒い长髪が対比し、银色と白色の发饰细部、花と真珠の流苏付き古代风髪饰りで结われた女性の髪、肩を出した白い毛绒质感の衣类、全体として清冷でありながら古典的な柔美',
           '海の夕暮れ、ピンクとオレンジの空、遠くに小さな船が帰航',
           '魔法の森の中で光るキノコ、霧がかかった幻想的な雰囲気',
           '中国の水墨画の山水、雲に隠れた山、孤舟の翁、余白の意境',
@@ -626,7 +627,7 @@
       ],
       examples: {
         t2i: [
-          '네온에 비친 비 오는 밤, 사이버펑크 도시 옥상의 은색 기계 여우',
+          '초현실적, 고전 중국 선녀,绝世容颜,嫩芽绿仙气袭皮长裙,华丽的冰草绿色琉璃发饰头饰,bust,高清,정면高清图像特写,美若天仙,倾国倾城,매혹적,풍정,완만한,중국 고전 미녀,묘장 여곤왕,简单한 은장식을头戴,자연스럽게 흩어진 머리카락,폭포 같은 긴 머리가腰带까지,큰 귀걸이,전역 몽롱한 블러 효과,담채조의 암광 환경,노출과 실초 중첩,광영 효과,초광각 강한 원근 구도,동적 블러 가장자리 허화,강렬한 필름 입자와 높은 노이즈质感,번산 윤염하는 암부层次,과장된 인물 윤곽,초현실적 피사계 심도 제어,생동감있는 완벽한 세부사항,8K급 암조 사진,붉은 인물 사진,일상 스냅스톤 스타일,신중하지 않은 구도나 조명,우울하고 요염한 소녀,냉백피부,패션 코디,호두형 얼굴 뾰족한 턱,백투명 피부,투명感 있는 메이크업,고르게 자연스러운肤色,순수욕풍,머리카락 명확히 보이고,부드러운 자연광,고르지 않은 조명,자연스럽고 느슨한 표정,수정 없는 사진 느낌,생활의真实感,ccd 촬영 감성,아이폰 실사,진짜 사람,진짜 생활,고풍人像,암조 배경,빛이 인물에 집중,부드럽고精致한 분위기,흑백을 주조색으로 한 흰 의상과 검은 긴머리 대비,은색과 흰색 머리 장식 세부,꽃과 진주 줄실이 있는 고풍 머리장식으로 묶인 머리,어깨를 드러낸 흰색 털质感 의상,전체적으로 청전하면서도 고전적柔美',
           '바다의 석양, 분홍과 주황색 하늘, 멀리 작은 배가 귀항',
           '마법의 숲에서 빛나는 버섯, 안개가 자욱한 환상적 분위기',
           '중국 수묵산수화, 구름에 가려진 산, 외로운 배와 노인, 여백의 미',
@@ -781,7 +782,7 @@
       ],
       examples: {
         t2i: [
-          'Un zorro mecánico plateado en un tejado neón de ciudad cyberpunk de noche',
+          'Ultrarealista, doncella fairie china antigua, belleza sin igual, vistiendo larga vestidura eterea color verde brote con textura de piel, ornamentos capilares de vidrio verde hielo, busto, HD, retrato frontal, bella como el cielo, belleza que conquista reinos, encantadora, sensual, languida, belleza clasica china, reina del veneno Miao, adornos plateados simples, cabello natural cayendo hasta la cintura, grandes aretes, efecto de desenfoque general, iluminacion tenue tonos suaves, superposicion exposicion-desenfoque, efectos de luz, composicion ultra gran angular fuerte perspectiva, desenfoque dinamico en bordes, fuerte granulado de pelicula y textura alto ruido, capas oscuras difuminadas, silueta exagerada, profundidad de campo surrealista, detalles vivos perfectos, fotografia 8K tono oscuro, fotografia de retrato roja, estilo snapshot cotidiano, composicion y luz no refinadas, doncella melancolica y seductora, piel blanca fria, outfit moda, rostro oval menton puntiagudo, piel blanca translucida, base transparente, tono piel uniforme natural, estilo puro-deseo, mechones de cabello visibles, luz suave natural, iluminacion no uniforme, expresion natural relajada, foto sin retoques, sensibilidad vida real, efecto foto CCD, foto real con iPhone, persona real, vida real, retrato estilo antiguo, fondo oscuro, luz enfocada en el sujeto, atmosfera suave pero exquisita, esquema colores negro y blanco, vestido blanco contrastando con largo cabello negro, detalles accesorios plateados y blancos, cabello femenino recogido con horquillas antiguas flores y flecos perlas, vestimenta blanca hombros al aire textura aterciopelada, estilo general fresco pero gracia clasica',
           'Puesta de sol en la playa, cielo rosa y naranja, un pequeño bote regresando',
           'Seta brillante en bosque encantado, niebla, atmósfera onírica',
           'Paisaje chino ink wash, montañas entre nubes, bote solitario, espacio negativo',
@@ -936,7 +937,7 @@
       ],
       examples: {
         t2i: [
-          'Un renard mécanique argenté sur un toit néon de ville cyberpunk la nuit',
+          'Ultraréaliste, demoiselle fée chinoise ancienne, beauté sans pareille, portant longue robe verte pousse éthérée avec texture de peau, ornements capillaires verre vert-glace, buste, HD, portrait frontal, belle comme le ciel, beauté qui fait tomber les villes, envoûtante, charmeuse, langoureuse, beauté classique chinoise, reine du venin Miao, parures d\'argent simples, cheveux naturels tombant jusqu\'aux hanches, grandes boucles d\'oreilles, effet flou global, éclairage sombre tons doux, superposition exposition-flou, effets lumineux, composition ultra grand-angle forte perspective, flou dynamique bords, fort grain pellicule texture haut bruit, couches sombres diffusées, silhouette exagérée, profondeur de champ surréaliste, détails vivants parfaits, photographie 8K ton sombre, photographie portrait rouge, style snapshot quotidien, composition et lumière non travaillées, jeune femme mélancolique et séductrice, peau blanche froide, tenue mode, visage ovale menton pointu, peau blanche translucide, fond teint transparent, ton peau uniforme naturel, style pur-désir, mèches cheveux visibles, lumière douce naturelle, éclairage non uniforme, expression naturelle détendue, photo sans retouches, sensation vie réelle, effet photo CCD, photo réelle iPhone, vraie personne, vraie vie, portrait style ancien, fond sombre, lumière focalisée sur le sujet, atmosphère douce mais exquise, palette noir et blanc, vêtement blanc contrastant avec longue chevelure noire, détails accessoires argentés et blancs, cheveux féminins coiffés avec barrettes anciennes fleurs et glands perles, vêtement blanc épaules nues texture moelleuse, style général frais mais grâce classique',
           'Coucher de soleil sur la plage, ciel rose et orange, un petit bateau qui rentre',
           'Champignon lumineux dans forêt enchantée, brume, atmosphère onirique',
           'Paysage encre chinoise, montagnes dans les nuages, bateau solitaire, espace négatif',
@@ -1091,7 +1092,7 @@
       ],
       examples: {
         t2i: [
-          'Ein silberner mechanischer Fuchs auf einem Neon-Dach einer Cyberpunk-Stadt bei Nacht',
+          'Ultrarealistisch, antike chinesische Feenkönigin, unvergleichliche Schönheit, trägt grünes ätherisches Fell-langgewand mit Bräunling-Textur, aufwendige eisgrüne Glas-Haarschmuck, Brust, HD, Frontalporträt, himmlisch schön, stadtzerstörende Schönheit, betörend, sinnlich, mühelos, klassisch chinesische Schönheit, Miao-Giftkönigin, einfache Silberschmuck, natürlich fallende Haare bis zur Taille, große Ohrringe, globaler Weichzeichner-Effekt, sanftes dunkles Licht, Belichtung-Undschärfe-Überlagerung, Lichteffekte, Ultra-Weitwinkel starke Perspektiv-Komposition, dynamische Unschärfe an den Rändern, starkes Filmkorn und hohe Rausch-Textur, diffuse dunkle Schichten, übertriebene Figurenkontur, surreale Tiefenschärfe-Kontrolle, lebendige perfekte Details, 8K-Dunkelfotografie, rote Porträtfotografie, alltäglicher Schnappschuss-Stil, nicht sorgfältige Komposition oder Beleuchtung, melancholische verführerische Jungfrau, kühles weißes Haut, modisches Outfit, Gesicht oval spitzes Kinn, weiß durchscheinende Haut, transparente Grundierung, gleichmäßige natürliche Hautfarbe, rein-düster Stil, sichtbar einzelne Haarsträhnen, weiches natürliches Licht, ungleichmäßige Beleuchtung, natürlich entspannter Ausdruck, unretuschiertes Foto-Feeling, echtes Lebensgefühl, CCD-Fotoeffekt, iPhone-Echtfoto, echte Person, echtes Leben, antik-chinesisches Porträt, dunkler Hintergrund, Licht auf das Motiv gerichtet, sanfte aber exquisite Atmosphäre, Schwarz-Weiß-Farbschema, weißes Gewand kontrastiert mit langem schwarzen Haar, silberne und weiße Haarschmuck-Details, weibliches Haar mit Blumen-Perlen-Tressen-Haarspangen gestylt, schulterfreies weißes flauschiges Gewand, insgesamt Stil kühll aber klassisch schön',
           'Sonnenaufgang am Strand, rosa und orangefarbener Himmel, ein kleines Boot in der Ferne',
           'Leuchtender Pilz in verzaubertem Wald, neblig, traumhafte Atmosphäre',
           'Chinesische Tuschmalerei Landschaft, Berge in Wolken, einsames Boot, negativer Raum',
@@ -1246,7 +1247,7 @@
       ],
       examples: {
         t2i: [
-          'Uma raposa mecânica prateada no telhado neon de cidade cyberpunk à noite',
+          'Ultrarrealista, donzela fada chinesa antiga, beleza sem igual, vestindo longa vestimenta eterea verde broto com textura de pele, ornamentos capilares de vidro verde-gelo, busto, HD, retrato frontal, bela como celeste, beleza que faz cair reinos, encantadora, sensual, lânguida, beleza classica chinesa, rainha do veneno Miao, adornos prateados simples, cabelo natural caindo até a cintura, brincos grandes, efeito desfocado geral, iluminacao tenue tons suaves, sobreposicao exposicao-desfoco, efeitos de luz, composicao ultra grande-angular forte perspectiva, desfoque dinamico nas bordas, forte granulação de filme e textura alto ruido, camadas escuras difusas, silhueta exagerada, profundidade de campo surrealista, detalhes vigidos perfeitos, fotografia 8K tom escuro, fotografia de retrato vermelha, estilo snapshot cotidiano, composicao e luz não refinadas, donzela melancolica e sedutora, pele branca fria, outfit moda, rosto oval queixo pontiagudo, pele branca translucida, base transparente, tom pele uniforme natural, estilo puro-desejo, mechas cabelo visíveis, luz suave natural, iluminação não uniforme, expressão natural relaxada, foto sem retoques, sensação vida real, efeito foto CCD, foto real iPhone, pessoa real, vida real, retrato estilo antigo, fundo escuro, luz focada no sujeito, atmosfera suave mas requintada, esquema cores preto e branco, vestido branco contrastando com longo cabelo preto, detalhes acessórios prateados e brancos, cabelo feminino preso com presilhas antigas flores e pendentes pérolas, vestimenta branca ombros à mostra textura felpuda, estilo geral fresco mas graça clássica',
           'Pôr do sol na praia, céu rosa e laranja, um pequeno barco retornando',
           'Cogumelo brilhante em floresta encantada, neblina, atmosfera onírica',
           'Paisagem tinta chinesa, montanhas entre nuvens, barco solitário, espaço negativo',
