@@ -1531,7 +1531,6 @@
     }, true);
 
     $('#genBtn').addEventListener('click', function () { startGeneration(); });
-    $('#optimizeBtn').addEventListener('click', doOptimize);
 
     $('#lightbox').addEventListener('click', function (e) {
       if (e.target.id === 'lightbox') closeLightbox();
