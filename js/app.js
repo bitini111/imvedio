@@ -26,6 +26,7 @@
       opt.classList.toggle('active', opt.getAttribute('data-lang') === code);
     });
     // 重新渲染所有动态文本
+    _exampleOrder = {};       // 先清空示例缓存，确保读取当前语言
     renderModeSwitch();
     renderCreator();
     if (state.view === 'history') renderHistory();
@@ -33,8 +34,6 @@
     renderStage();
     translateStatic();
     renderExamples();
-    // 清空示例顺序缓存，确保切换语言后重新读取当前语言的示例
-    _exampleOrder = {};
     // 如果有弹窗打开，也更新
     if (!$('#settingsModal').classList.contains('is-hidden')) openSettings();
   }
