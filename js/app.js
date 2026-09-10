@@ -578,6 +578,7 @@
         '<div class="result-prompt">' +
           '<span class="kicker">' + I18N.t(modeNavKey[run.kind] || 'navImage') + '</span>' +
           '<span class="text">' + escapeHtml(run.prompt) + '</span>' +
+          '<button class="copy-prompt-btn" data-action="copy-prompt" title="' + I18N.t('btnCopy') + '">', I18N.t('btnCopy') + '</button>' +
         '</div>' +
         '<div class="result-params">' + chipsOf(run) + '</div>' +
         '<div class="result-actions">' +
@@ -1237,12 +1238,29 @@
       deep + (style ? '，' + style : '') + camera).slice(0, 2048);
   }
 
-  /* ---------- 下载 ---------- */
+  /* ---------- 下载 / 复制 ---------- */
   function dl(a, filename) {
     a.download = filename;
     document.body.appendChild(a);
     a.click();
     a.remove();
+  }
+  function copyText(text) {
+    if (!text) return;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { toast(I18N.t('msgCopied'), 'ok'); }).catch(function () { fallbackCopy(text); });
+    } else {
+      fallbackCopy(text);
+    }
+  }
+  function fallbackCopy(text) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); toast(I18N.t('msgCopied'), 'ok'); } catch (e) { toast(I18N.t('msgCopyFailed'), 'err'); }
+    ta.remove();
   }
   function downloadUrl(url, filename) {
     if (!url) return;
@@ -1326,6 +1344,7 @@
         downloadImage(run || nearestRun(), idx);
         return;
       case 'download-video': downloadVideo(run || nearestRun()); return;
+      case 'copy-prompt': copyText((run || nearestRun()).prompt); return;
       case 'toggle-play': case 'seek': case 'set-mode': return;
       case 'open-history':
         if (state.view === 'history') { state.view = 'create'; renderStage(); $('#promptInput').focus(); return; }
