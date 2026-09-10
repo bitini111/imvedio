@@ -578,7 +578,9 @@
         '<div class="result-prompt">' +
           '<span class="kicker">' + I18N.t(modeNavKey[run.kind] || 'navImage') + '</span>' +
           '<span class="text">' + escapeHtml(run.prompt) + '</span>' +
-          '<button class="copy-prompt-btn" data-action="copy-prompt" title="' + I18N.t('btnCopy') + '">', I18N.t('btnCopy') + '</button>' +
+          '<button class="copy-icon" data-action="copy-prompt" title="' + I18N.t('btnCopy') + '">' +
+            '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>' +
+          '</button>' +
         '</div>' +
         '<div class="result-params">' + chipsOf(run) + '</div>' +
         '<div class="result-actions">' +
@@ -746,7 +748,12 @@
       body.innerHTML =
         '<div class="lightbox-media"><img src="' + src + '"></div>' +
         '<div class="lightbox-foot"><div class="info">' +
-          '<p class="fp">' + escapeHtml(r.prompt) + '</p><div class="chips">' + chipsOf(r) + '</div></div>' +
+          '<div class="fp-row"><span class="fp">' + escapeHtml(r.prompt) + '</span>' +
+            '<button class="copy-icon lb-copy" data-action="lb-copy-prompt" title="' + I18N.t('btnCopy') + '">' +
+              '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>' +
+            '</button>' +
+          '</div>' +
+          '<div class="chips">' + chipsOf(r) + '</div></div>' +
           '<div class="acts">' +
             '<button class="mini-btn" data-action="lb-download">' + I18N.t('btnDownload') + '</button>' +
             '<button class="mini-btn primary" data-action="lb-regen">' + I18N.t('btnRegen') + '</button>' +
@@ -759,7 +766,12 @@
       body.appendChild(mediaBox);
       body.insertAdjacentHTML('beforeend',
         '<div class="lightbox-foot"><div class="info">' +
-          '<p class="fp">' + escapeHtml(r.prompt) + '</p><div class="chips">' + chipsOf(r) + '</div></div>' +
+          '<div class="fp-row"><span class="fp">' + escapeHtml(r.prompt) + '</span>' +
+            '<button class="copy-icon lb-copy" data-action="lb-copy-prompt" title="' + I18N.t('btnCopy') + '">' +
+              '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>' +
+            '</button>' +
+          '</div>' +
+          '<div class="chips">' + chipsOf(r) + '</div></div>' +
           '<div class="acts">' +
             '<button class="mini-btn" data-action="lb-download">' + I18N.t('btnDownloadVideo') + '</button>' +
             '<button class="mini-btn primary" data-action="lb-regen">' + I18N.t('btnRegen') + '</button>' +
@@ -1345,6 +1357,7 @@
         return;
       case 'download-video': downloadVideo(run || nearestRun()); return;
       case 'copy-prompt': copyText((run || nearestRun()).prompt); return;
+      case 'lb-copy-prompt': copyText(state.lbRun ? state.lbRun.prompt : ''); return;
       case 'toggle-play': case 'seek': case 'set-mode': return;
       case 'open-history':
         if (state.view === 'history') { state.view = 'create'; renderStage(); $('#promptInput').focus(); return; }

@@ -482,24 +482,31 @@ textarea { font-family: inherit; }
 
 /* 结果区 */
 .result-bar {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 12px; flex-wrap: wrap;
-  padding-bottom: 16px;
+  display: flex; align-items: center; gap: 10px;
+  padding-bottom: 12px;
   border-bottom: 1px solid var(--line);
-  margin-bottom: 18px;
+  margin-bottom: 14px;
 }
 .result-prompt {
-  display: flex; align-items: baseline; gap: 10px; min-width: 0;
+  display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1;
 }
 .result-prompt .kicker {
   font-size: 11px; font-weight: 600; letter-spacing: .12em;
   color: var(--text-3); white-space: nowrap;
 }
 .result-prompt .text {
-  font-size: 13.5px; color: var(--text);
+  font-size: 13px; color: var(--text);
   overflow: hidden; display: -webkit-box;
-  -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1; -webkit-box-orient: vertical;
 }
+.copy-icon {
+  flex: none; display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; border-radius: 6px;
+  color: var(--text-3); transition: color .15s, background .15s;
+  cursor: pointer;
+}
+.copy-icon:hover { color: var(--text); background: var(--surface-2); }
+.copy-icon svg { width: 14px; height: 14px; }
 .result-params { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .mini-chip {
   font-size: 11.5px; color: var(--text-2);
@@ -735,12 +742,15 @@ textarea { font-family: inherit; }
   flex-wrap: wrap;
 }
 .lightbox-foot .info { min-width: 0; }
+.lightbox-foot .fp-row {
+  display: flex; align-items: flex-start; gap: 8px;
+}
 .lightbox-foot .fp {
-  margin: 0 0 6px; font-size: 13.5px; color: var(--text);
+  flex: 1; margin: 0; font-size: 13.5px; color: var(--text);
   overflow: hidden; display: -webkit-box;
   -webkit-line-clamp: 2; -webkit-box-orient: vertical;
 }
-.lightbox-foot .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.lightbox-foot .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
 .lightbox-foot .acts { display: flex; gap: 8px; }
 
 /* ---------- 磨砂玻璃气泡 ---------- */
