@@ -128,14 +128,18 @@ textarea { font-family: inherit; }
   border-radius: 999px;
   padding: 3px;
   margin: 0 auto;
+  flex-shrink: 1;
+  min-width: 0;
 }
 .mode-btn {
   font-size: 13px; font-weight: 600;
   color: var(--text-2);
-  padding: 6px 14px;
+  padding: 6px 12px;
   border-radius: 999px;
   transition: color .18s, background .18s, box-shadow .18s;
   white-space: nowrap;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 .mode-btn[aria-selected="true"] {
   color: var(--text);
