@@ -913,7 +913,7 @@
         ratio: effRatio(run),
         style: run.params.style,
         images: run.images.length ? run.images : undefined,
-        seed: RNG.hashString(run.prompt + ':' + idx),
+        seed: RNG.hashString(run.prompt + ':' + idx + ':' + Math.random()),
         resolution: run.params.resolution || '1K',
         customSize: run.params.ratio === '自定义' ? [run.params.customRatioW, run.params.customRatioH] : undefined
       }).then(function (url) {
