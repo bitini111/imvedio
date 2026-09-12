@@ -62,6 +62,24 @@ http.createServer(async (req, res) => {
   const pathname = decodeURIComponent(url.pathname);
   const search = url.search; // 含 ?
 
+  // —— 工作流文件列表 API ——
+  if (pathname === '/api/workflows') {
+    const modes = ['t2i', 'i2i', 't2v', 'i2v'];
+    const result = {};
+    for (const mode of modes) {
+      const dir = path.join(ROOT, 'workflows', mode);
+      try {
+        const files = fs.readdirSync(dir).filter(f => f.endsWith('.json'));
+        result[mode] = files;
+      } catch (e) {
+        result[mode] = [];
+      }
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(result));
+    return;
+  }
+
   // —— Agnes AI 同源代理 ——
   if (pathname.startsWith('/api/')) {
     let target;
@@ -87,13 +105,19 @@ http.createServer(async (req, res) => {
 
   fs.stat(filePath, (err, stat) => {
     if (err || !stat.isFile()) {
-      const idx = path.join(ROOT, 'index.html');
-      fs.stat(idx, (e2, s2) => {
-        if (e2 || !s2.isFile()) { res.writeHead(404); res.end('Not Found'); return; }
-        const body = fs.readFileSync(idx);
-        res.writeHead(200, { 'Content-Type': MIME['.html'] });
-        res.end(body);
-      });
+      // 只有根路径才返回 index.html（SPA 支持）
+      if (pathname === '/') {
+        const idx = path.join(ROOT, 'index.html');
+        fs.stat(idx, (e2, s2) => {
+          if (e2 || !s2.isFile()) { res.writeHead(404); res.end('Not Found'); return; }
+          const body = fs.readFileSync(idx);
+          res.writeHead(200, { 'Content-Type': MIME['.html'] });
+          res.end(body);
+        });
+      } else {
+        res.writeHead(404);
+        res.end('Not Found');
+      }
       return;
     }
     const ext = path.extname(filePath).toLowerCase();

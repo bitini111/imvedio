@@ -185,14 +185,56 @@
 
     <div class="sp-field">
       <span class="sp-label" data-i18n="settingEngine">生成引擎</span>
-      <div class="seg" id="engineSeg">
-        <button class="seg-btn" data-engine="ai">AI 接口</button>
-        <button class="seg-btn" data-engine="local">本地演示</button>
+      <div class="seg seg-radio" id="engineSeg" role="radiogroup" aria-label="选择生成引擎">
+        <button class="seg-btn" data-engine="ai" role="radio" aria-checked="true">AI 接口</button>
+        <button class="seg-btn" data-engine="comfyui" role="radio" aria-checked="false">ComfyUI（本地）</button>
       </div>
-      <p class="sp-hint" data-i18n="hintEngine">AI 接口：调用 Agnes AI 真实生成；本地演示：无需网络，用内置引擎生成（便于离线演示）。</p>
+      <p class="sp-hint" data-i18n="hintEngine">AI 接口：调用 Agnes AI 真实生成；ComfyUI：连接本地 ComfyUI 服务，从 workflows/ 目录加载工作流，支持文生图/图生图/文生视频/图生视频。</p>
     </div>
 
-    <div class="sp-field">
+    <div class="sp-field is-hidden" id="comfyuiUrlGroup">
+      <span class="sp-label" data-i18n="settingComfyuiUrl">ComfyUI 地址</span>
+      <input type="text" class="sp-input" id="comfyuiUrlInput"
+        placeholder="http://127.0.0.1:8188">
+      <p class="sp-hint" data-i18n="hintComfyuiUrl">填写本地 ComfyUI 服务的地址，默认 http://127.0.0.1:8188。工作流文件位于项目根目录 workflows/ 下的 t2i/ i2i/ t2v/ i2v/ 四个子目录中。</p>
+    </div>
+
+    <div class="sp-field is-hidden" id="workflowFields">
+      <span class="sp-label" data-i18n="settingWorkflow">工作流文件</span>
+      <div class="workflow-selects">
+        <div class="workflow-row">
+          <label>文生图：</label>
+          <select id="workflowT2I" class="sp-select">
+            <option value="">使用默认</option>
+            <option value="workflows/t2i/text_to_image.json">workflows/t2i/text_to_image.json</option>
+          </select>
+        </div>
+        <div class="workflow-row">
+          <label>图生图：</label>
+          <select id="workflowI2I" class="sp-select">
+            <option value="">使用默认</option>
+            <option value="workflows/i2i/image_to_image.json">workflows/i2i/image_to_image.json</option>
+          </select>
+        </div>
+        <div class="workflow-row">
+          <label>文生视频：</label>
+          <select id="workflowT2V" class="sp-select">
+            <option value="">使用默认</option>
+            <option value="workflows/t2v/text_to_video.json">workflows/t2v/text_to_video.json</option>
+          </select>
+        </div>
+        <div class="workflow-row">
+          <label>图生视频：</label>
+          <select id="workflowI2V" class="sp-select">
+            <option value="">使用默认</option>
+            <option value="workflows/i2v/image_to_video.json">workflows/i2v/image_to_video.json</option>
+          </select>
+        </div>
+      </div>
+      <p class="sp-hint">选择要使用的工作流文件，留空则使用默认工作流。</p>
+    </div>
+
+    <div class="sp-field" id="apiKeyField">
       <span class="sp-label" data-i18n="settingApi">API 密钥</span>
       <input type="password" class="sp-input" id="apiKeyInput" autocomplete="off" spellcheck="false"
         placeholder="sk-…">
@@ -206,7 +248,7 @@
       <p class="sp-hint" data-i18n="hintQuota">超出上限后点击「生成」会提示次数用尽。修改会即时生效，若当前已用额度超过新上限会自动截断至新上限。</p>
     </div>
 
-    <div class="sp-field">
+    <div class="sp-field" id="videoModelField">
       <span class="sp-label" data-i18n="settingVideoModel">视频接口</span>
       <div class="seg" id="videoModelSeg">
         <button class="seg-btn" data-vmodel="agnes-video-2.5-flash">2.5 Flash</button>
@@ -234,6 +276,7 @@
 
 <script src="js/rng.js"></script>
 <script src="js/art.js"></script>
+<script src="js/comfyui.js"></script>
 <script src="js/agnes.js"></script>
 <script src="js/storage.js"></script>
 <script src="js/i18n.js"></script>

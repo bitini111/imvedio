@@ -91,7 +91,7 @@
     config: Agnes.loadConfig(),
     generating: false,
     cancelReq: false,
-    forceLocal: false,     // 单次强制本地演示
+    forceComfyUI: false,   // 单次强制 ComfyUI
     run: null,
     history: [],
     filter: 'all',
@@ -209,7 +209,7 @@
     if (q === 0) $('#quotaPill').classList.add('zero');
     else $('#quotaPill').classList.remove('zero');
     $('#quotaPill').title = I18N.t('quotaLabel');
-    var engineKey = state.config.engine === 'ai' ? 'engineAI' : 'engineLocal';
+    var engineKey = state.config.engine === 'ai' ? 'engineAI' : 'engineComfyUI';
     if ($('#footEngine')) $('#footEngine').textContent = ' ' + I18N.t(engineKey);
   }
   function renderModeSwitch() {
@@ -504,7 +504,6 @@
         '<p class="gen-eta" style="font-family:inherit;color:var(--text-2);max-width:420px;line-height:1.6">' + escapeHtml(run.error || I18N.t('errDetail')) + '</p>' +
         '<div style="display:flex;gap:10px;margin-top:6px">' +
           '<button class="mini-btn primary" data-action="retry-gen">' + I18N.t('btnRetry') + '</button>' +
-          '<button class="mini-btn" data-action="local-demo">' + I18N.t('btnLocalDemo') + '</button>' +
           '<button class="mini-btn" data-action="clear-run">' + I18N.t('btnClear') + '</button>' +
         '</div>' +
       '</div>'
@@ -824,16 +823,16 @@
     state.run = run;
     state.generating = true;
     state.cancelReq = false;
-    state.forceLocal = !!opts.local;
+    state.forceComfyUI = !!opts.comfyui;
     setGenBtnLoading(true);
     renderStage();
 
-    var useLocal = state.forceLocal || state.config.engine === 'local';
+    var useComfyUI = state.forceComfyUI || state.config.engine === 'comfyui';
     run._start = Date.now();
-    run.effectiveRatio = run.params.ratio;   // 非「原图」时即所选比例
+    run.effectiveRatio = run.params.ratio;
     run.size = null;
     var launch = function () {
-      if (useLocal) runLocal(run);
+      if (useComfyUI) runComfyUI(run);
       else runAI(run);
     };
     if (run.params.ratio === '原图') {
@@ -1046,17 +1045,16 @@
     return tick();
   }
 
-  /* ============ 本地路径（离线回退） ============ */
-  function runLocal(run) {
-    if (MODES[run.kind].out === 'image') runImagesLocal(run);
-    else runVideosLocal(run);
+  /* ============ ComfyUI 路径 ============ */
+  function runComfyUI(run) {
+    if (MODES[run.kind].out === 'image') runImagesComfyUI(run);
+    else runVideosComfyUI(run);
   }
 
-  function runImagesLocal(run) {
-    var n = run.params.count;
+  function runImagesComfyUI(run) {
+    var n = run.params.count || 1;
     var completed = 0;
     var failed = null;
-    var gen = run.images.length ? Art.generateImageFromImages : Art.generateImage;
 
     function processNext() {
       if (state.cancelReq) { abortQuiet(); return; }
@@ -1065,25 +1063,28 @@
         if (failed && !state.cancelReq) failRun(run, failed);
         return;
       }
-      var idx = completed;
-      gen({
-        prompt: run.prompt, ratio: effRatio(run), style: run.params.style, size: run.size,
-        images: run.images.length ? [run.images[0]] : undefined,
-        seed: RNG.hashString(run.prompt + ':' + idx) + '_' + Math.random().toString(36).slice(2, 8),
-        resolution: run.params.resolution || '1K',
-        customSize: run.params.ratio === '自定义' ? [run.params.customRatioW, run.params.customRatioH] : undefined
-      }, function (u) {
-        if (state.cancelReq) return;
-        run.progress = Math.min(0.95, (completed + u.progress) / n);
-        run.phase = n > 1 ? '正在生成（' + (completed + 1) + '/' + n + '）…' : '正在生成…';
-        paintProgress(run);
-      }).then(function (blob) {
-        if (state.cancelReq) return;
-        run.blobs[idx] = blob;
-        completed++;
+      ComfyUI.genImage({
+        mode: run.kind === 'i2i' ? 'i2i' : 't2i',
+        prompt: composePrompt(run),
+        seed: RNG.hashString(run.prompt + ':' + completed),
+        images: run.images.length ? run.images : [],
+        workflowPath: ComfyUI.getCustomWorkflow(run.kind === 'i2i' ? 'i2i' : 't2i'),
+        onProgress: function (p) {
+          if (state.cancelReq) return;
+          run.progress = Math.min(0.95, (completed + p.progress) / n);
+          run.phase = n > 1 ? 'ComfyUI 生成中（' + (completed + 1) + '/' + n + '）…' : 'ComfyUI 生成中…';
+          paintProgress(run);
+        }
+      }).then(function (result) {
+        if (state.cancelReq) { abortQuiet(); return; }
+        var urls = result.urls || [];
+        urls.forEach(function (u, i) {
+          if (completed + i < n) run.urls[completed + i] = u;
+        });
+        completed += urls.length || 1;
         renderStage();
-        return yieldToUI();
-      }).then(processNext).catch(function (err) {
+        return yieldToUI().then(processNext);
+      }).catch(function (err) {
         failed = err;
         processNext();
       });
@@ -1091,56 +1092,37 @@
     processNext();
   }
 
-  function runVideosLocal(run) {
+  function runVideosComfyUI(run) {
     var total = run.params.duration;
     var mm = MODES[run.kind];
-    var maxSegDur = mm.customDurMax || 12;
-    var segs = [];
-    if (total <= maxSegDur) {
-      segs = [total];
-    } else {
-      var nSegs = Math.ceil(total / maxSegDur);
-      var remaining = total;
-      for (var si = 0; si < nSegs; si++) {
-        var segDur = Math.min(maxSegDur, remaining);
-        segs.push(segDur);
-        remaining -= segDur;
-      }
-    }
-    run.segments = segs.map(function (dur, i) { return { dur: dur, idx: i, status: 'queued', blob: null, thumb: null }; });
-    var n = segs.length;
-    var signal = { canceled: false };
-    state._localSig = signal;
-    run.phase = '开始生成本地预览（片段 1/' + n + '）…';
+    run.phase = 'ComfyUI 准备中…';
     paintProgress(run);
-
-    (function advance(i) {
-      if (state.cancelReq) { abortQuiet(); return; }
-      if (i >= n) { completeRun(run); return; }
-      var seg = run.segments[i];
-      seg.status = 'in_progress';
-      var gen = run.images.length ? Art.generateVideoFromImages : Art.generateVideo;
-      gen({
-        prompt: composePrompt(run), ratio: effRatio(run), duration: seg.dur, size: run.size,
-        camera: run.params.camera, style: '电影感',
-        images: MODES[run.kind].needsImage && run.images.length ? run.images : undefined,
-        resolution: run.params.resolution || '1K',
-        customSize: run.params.ratio === '自定义' ? [run.params.customRatioW, run.params.customRatioH] : undefined
-      }, function (u) {
-        var base = i / n;
-        run.progress = Math.min(0.95, base + u.progress / n);
-        run.phase = '正在生成本地预览（片段 ' + (i + 1) + '/' + n + '）…';
-        var est = n * 12000;
-        run.eta = '预计还需 ' + fmtEta(est * (1 - run.progress));
+    ComfyUI.genVideo({
+      mode: run.kind === 'i2v' ? 'i2v' : 't2v',
+      prompt: composePrompt(run),
+      duration: total,
+      seed: RNG.hashString(run.prompt + ':' + 0),
+      images: run.images.length ? run.images : [],
+      workflowPath: ComfyUI.getCustomWorkflow(run.kind === 'i2v' ? 'i2v' : 't2v'),
+      onProgress: function (p) {
+        if (state.cancelReq) return;
+        run.progress = Math.min(0.95, p.progress);
+        run.phase = p.phase || 'ComfyUI 生成中…';
         paintProgress(run);
-      }, signal).then(function (res) {
-        if (!state.cancelReq) { seg.blob = res.blob; seg.thumb = res.thumb; seg.status = 'completed'; }
-        return yieldToUI().then(function () { advance(i + 1); });
-      }).catch(function (err) {
-        if (state.cancelReq) { abortQuiet(); return; }
-        failRun(run, err);
+      }
+    }).then(function (result) {
+      if (state.cancelReq) { abortQuiet(); return; }
+      run.segments = (result.segments || []).map(function (s, i) {
+        return { url: s.url || s, dur: total, idx: i, status: 'completed' };
       });
-    })(0);
+      if (!run.segments.length) {
+        run.segments = [{ url: (result.urls && result.urls[0]) || null, dur: total, idx: 0, status: 'completed' }];
+      }
+      completeRun(run);
+    }).catch(function (err) {
+      if (state.cancelReq) return;
+      failRun(run, err);
+    });
   }
 
   /* ---------- 完成 / 失败 ---------- */
@@ -1180,7 +1162,8 @@
     renderTopbar();
     renderStage();
     if (state.view === 'history') renderHistory();
-    toast((MODES[run.kind].out === 'image' ? '图片' : '视频') + '生成完成' + (state.config.engine === 'local' || state.forceLocal ? '（本地预览）' : ''), 'ok');
+    toast((MODES[run.kind].out === 'image' ? '图片' : '视频') + '生成完成' +
+      (state.config.engine === 'comfyui' ? '（ComfyUI）' : ''), 'ok');
   }
 
   function failRun(run, err) {
@@ -1203,7 +1186,6 @@
   function cancelGeneration() {
     if (!state.generating) return;
     state.cancelReq = true;
-    if (state._localSig) state._localSig.canceled = true;
   }
 
   /* ---------- 描述优化 ---------- */
@@ -1216,7 +1198,7 @@
     btn.textContent = '优化中…';
     var hasImages = !!state.images.length;
     var p;
-    if (state.config.engine === 'ai' && !state.forceLocal) {
+    if (state.config.engine === 'ai' && !state.forceComfyUI) {
       p = Agnes.optimizePrompt(text, hasImages);
     } else {
       p = Promise.resolve(localOptimize(text, state.mode));
@@ -1321,13 +1303,6 @@
         state.run = null;
         state.generating = false;
         startGeneration({ prompt: prev.prompt });
-        return;
-      }
-      case 'local-demo': {
-        var pp = state.run;
-        state.run = null;
-        state.generating = false;
-        startGeneration({ prompt: pp.prompt, local: true });
         return;
       }
       case 'remix-prompt':
@@ -1563,11 +1538,41 @@
     var cfg = state.config;
     $('#apiKeyInput').value = cfg.apiKey;
     $('#quotaLimitInput').value = state.quotaLimit;
-    ['ai', 'local'].forEach(function (v) {
-      $('#engineSeg [data-engine="' + v + '"]').setAttribute('aria-pressed', String(cfg.engine === v));
+    $('#comfyuiUrlInput').value = cfg.comfyuiUrl || (ComfyUI.DEFAULT_URL || 'http://127.0.0.1:8188' || 'http://127.0.0.1:8188');
+    // 加载已保存的工作流选择
+    ['t2i', 'i2i', 't2v', 'i2v'].forEach(function (mode) {
+      var sel = $('#workflow' + mode.toUpperCase());
+      if (sel) sel.value = ComfyUI.getCustomWorkflow(mode) || '';
     });
+    // 动态加载工作流列表
+    if (cfg.engine === 'comfyui') {
+      ComfyUI.loadWorkflowOptions().then(function (options) {
+        ComfyUI.populateWorkflowSelects(options);
+        // 恢复已保存的选择
+        ['t2i', 'i2i', 't2v', 'i2v'].forEach(function (mode) {
+          var sel = $('#workflow' + mode.toUpperCase());
+          if (sel) sel.value = ComfyUI.getCustomWorkflow(mode) || '';
+        });
+      }).catch(function (e) {
+        console.error('加载工作流列表失败:', e.message);
+      });
+    }
+    ['ai', 'comfyui'].forEach(function (v) {
+      var el = $('#engineSeg [data-engine="' + v + '"]');
+      if (el) {
+        el.setAttribute('aria-checked', String(cfg.engine === v));
+        el.setAttribute('aria-pressed', String(cfg.engine === v));
+      }
+    });
+    // 显示/隐藏 ComfyUI URL 输入和工作流选择
+    $('#comfyuiUrlGroup').classList.toggle('is-hidden', cfg.engine !== 'comfyui');
+    $('#workflowFields').classList.toggle('is-hidden', cfg.engine !== 'comfyui');
+    // AI 引擎时显示密钥/视频模型，ComfyUI 时隐藏
+    $('#apiKeyField').classList.toggle('is-hidden', cfg.engine !== 'ai');
+    $('#videoModelField').classList.toggle('is-hidden', cfg.engine !== 'ai');
     ['agnes-video-2.5-flash', 'agnes-video-v2.0'].forEach(function (v) {
-      $('#videoModelSeg [data-vmodel="' + v + '"]').setAttribute('aria-pressed', String(cfg.videoModel === v));
+      var el = $('#videoModelSeg [data-vmodel="' + v + '"]');
+      if (el) el.setAttribute('aria-pressed', String(cfg.videoModel === v));
     });
     $('#settingsModal').classList.remove('is-hidden');
     // 翻译弹窗内容
@@ -1584,9 +1589,18 @@
       var b = e.target.closest('[data-engine]');
       if (!b) return;
       state.config.engine = b.getAttribute('data-engine');
-      ['ai', 'local'].forEach(function (v) {
-        $('#engineSeg [data-engine="' + v + '"]').setAttribute('aria-pressed', String(v === state.config.engine));
+      ['ai', 'comfyui'].forEach(function (v) {
+        var el = $('#engineSeg [data-engine="' + v + '"]');
+        if (el) {
+          el.setAttribute('aria-checked', String(v === state.config.engine));
+          el.setAttribute('aria-pressed', String(v === state.config.engine));
+        }
       });
+      // 根据引擎显示/隐藏相关字段
+      $('#comfyuiUrlGroup').classList.toggle('is-hidden', state.config.engine !== 'comfyui');
+      $('#workflowFields').classList.toggle('is-hidden', state.config.engine !== 'comfyui');
+      $('#apiKeyField').classList.toggle('is-hidden', state.config.engine !== 'ai');
+      $('#videoModelField').classList.toggle('is-hidden', state.config.engine !== 'ai');
       renderTopbar();
     });
     $('#videoModelSeg').addEventListener('click', function (e) {
@@ -1594,7 +1608,8 @@
       if (!b) return;
       state.config.videoModel = b.getAttribute('data-vmodel');
       ['agnes-video-2.5-flash', 'agnes-video-v2.0'].forEach(function (v) {
-        $('#videoModelSeg [data-vmodel="' + v + '"]').setAttribute('aria-pressed', String(v === state.config.videoModel));
+        var el = $('#videoModelSeg [data-vmodel="' + v + '"]');
+        if (el) el.setAttribute('aria-pressed', String(v === state.config.videoModel));
       });
     });
     $('#quotaLimitInput').addEventListener('input', function () {
@@ -1610,26 +1625,41 @@
       if (!isNaN(limit) && limit >= 1) {
         Store.setQuotaLimit(limit);
         state.quotaLimit = Store.getQuotaLimit();
-        // 同步 state 配额到 localStorage（防止旧值超出新上限后显示不一致）
         state.quota = Store.getQuota();
         Store.setQuota(state.quota);
       }
+      var url = ($('#comfyuiUrlInput').value || '').trim();
+      if (url) state.config.comfyuiUrl = url;
+      // 保存自定义工作流路径
+      ['t2i', 'i2i', 't2v', 'i2v'].forEach(function (mode) {
+        var sel = $('#workflow' + mode.toUpperCase());
+        if (sel) ComfyUI.saveCustomWorkflow(mode, sel.value || null);
+      });
       Agnes.saveConfig(state.config);
       renderTopbar();
       toast('设置已保存', 'ok');
       closeSettings();
     });
     $('#testConnBtn').addEventListener('click', function () {
-      state.config.apiKey = $('#apiKeyInput').value.trim();
-      Agnes.saveConfig(state.config);
+      var cfg = state.config;
+      cfg.apiKey = $('#apiKeyInput').value.trim();
+      var url = ($('#comfyuiUrlInput').value || '').trim();
+      if (url) cfg.comfyuiUrl = url;
+      Agnes.saveConfig(cfg);
       var btn = this;
       btn.disabled = true;
       var oldTxt = btn.textContent;
       btn.textContent = '测试中…';
-      Agnes.testConnection().then(function (t) {
-        toast('连接正常，AI 回复："' + t + '"', 'ok');
+      var doTest;
+      if (cfg.engine === 'comfyui') {
+        doTest = ComfyUI.testConnection();
+      } else {
+        doTest = Agnes.testConnection();
+      }
+      doTest.then(function (t) {
+        toast((cfg.engine === 'comfyui' ? 'ComfyUI' : 'AI') + ' 连接正常，返回："' + t + '"', 'ok');
       }).catch(function (err) {
-        toast('连接失败：' + ((err && err.message) || '请检查密钥与网络'), 'err');
+        toast('连接失败：' + ((err && err.message) || '请检查设置与网络'), 'err');
       }).finally(function () {
         btn.disabled = false;
         btn.textContent = oldTxt;
