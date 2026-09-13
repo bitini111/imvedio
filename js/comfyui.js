@@ -8,7 +8,7 @@ var ComfyUI = (function () {
 
   var WORKFLOWS_DIR = 'workflows/';
   var WORKFLOW_FILES = {
-    t2i: 't2i/text_to_image.json',
+    t2i: 't2i/z_image_turbo_example.json',
     i2i: 'i2i/image_to_image.json',
     t2v: 't2v/text_to_video.json',
     i2v: 'i2v/image_to_video.json'
@@ -18,7 +18,9 @@ var ComfyUI = (function () {
   function loadWorkflow(mode, customPath) {
     var file = customPath || WORKFLOW_FILES[mode];
     if (!file) return null;
-    return fetch(file).then(function (r) {
+    // 如果路径已是完整路径（以 workflows/ 开头），不再重复拼接
+    var fullPath = file.startsWith('workflows/') ? file : WORKFLOWS_DIR + file;
+    return fetch(fullPath).then(function (r) {
       if (!r.ok) throw new Error('无法加载工作流 ' + file + '（HTTP ' + r.status + '）');
       return r.json();
     });
@@ -81,12 +83,19 @@ var ComfyUI = (function () {
 
   /* ---------- 替换工作流中的 prompt（正向文本） ---------- */
   function injectPrompt(workflow, prompt, hasImage) {
+    // 注入到所有文本节点（positive 和 negative prompt）
+    var injected = false;
     for (var nodeId in workflow) {
       var node = workflow[nodeId];
       var inputs = node.inputs || {};
       if (inputs.text !== undefined) {
-        inputs.text = prompt;
-        break;
+        // 第一个文本节点注入完整 prompt，后续节点注入空字符串（作为 negative prompt）
+        if (!injected) {
+          inputs.text = prompt;
+          injected = true;
+        } else {
+          inputs.text = '';
+        }
       }
     }
     return workflow;
@@ -113,6 +122,54 @@ var ComfyUI = (function () {
       }
     }
     return workflow;
+  }
+
+  /* ---------- 将工作流节点键转换为 UUID（ComfyUI API 要求） ---------- */
+  function convertToUUIDKeys(workflow) {
+    var result = {};
+    var uuid = function() {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = Math.random() * 16 | 0;
+        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+      });
+    };
+    // 保存原始键映射，用于替换引用
+    var keyMap = {};
+    for (var oldKey in workflow) {
+      var newKey = uuid();
+      keyMap[oldKey] = newKey;
+      // 深拷贝并移除 _meta 等非 API 字段
+      var node = JSON.parse(JSON.stringify(workflow[oldKey]));
+      delete node._meta;
+      result[newKey] = node;
+    }
+    // 递归替换节点间的引用
+    function replaceRefs(obj) {
+      if (Array.isArray(obj)) {
+        // 检查是否是 [nodeId, index] 格式的引用
+        if (obj.length === 2 && typeof obj[0] === 'string' && keyMap[obj[0]]) {
+          return [keyMap[obj[0]], obj[1]];
+        }
+        // 否则递归处理数组元素
+        return obj.map(function(item) {
+          return replaceRefs(item);
+        });
+      }
+      if (obj && typeof obj === 'object') {
+        for (var key in obj) {
+          if (Array.isArray(obj[key])) {
+            obj[key] = replaceRefs(obj[key]);
+          } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+            replaceRefs(obj[key]);
+          }
+        }
+      }
+      return obj;
+    }
+    for (var newKey in result) {
+      result[newKey].inputs = replaceRefs(result[newKey].inputs);
+    }
+    return result;
   }
 
   /* ---------- 与 ComfyUI 建立 WebSocket 连接 ---------- */
@@ -142,68 +199,117 @@ var ComfyUI = (function () {
   function uid() { return 'agg-' + Date.now() + '-' + (++_connId); }
 
   /* ---------- 提交任务并轮询，返回结果 URL ---------- */
-  function queueAndPoll(ws, promptObj, onProgress) {
+  function queueAndPoll(ws, promptObj, onProgress, comfyuiUrl) {
     return new Promise(function (resolve, reject) {
       var clientId = ws.url.split('clientId=')[1] || uid();
-      ws.send(JSON.stringify({ type: 'prompt', prompt: promptObj, client_id: clientId }));
+      var baseUrl = comfyuiUrl || 'http://127.0.0.1:8188';
+      baseUrl = baseUrl.replace(/\/+$/, '');
+
+      var promptId = null;
+      var executed = false;
+
+      // 通过 HTTP POST 提交任务，获取 prompt_id
+      fetch(baseUrl + '/prompt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: promptObj, client_id: clientId })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (!data.prompt_id) {
+          reject(new Error('提交失败：未获取到prompt_id'));
+          return;
+        }
+        promptId = data.prompt_id;
+        console.log('[ComfyUI] Submitted:', promptId.substring(0, 8));
+        onProgress && onProgress({ progress: 0.05, phase: '任务已提交，等待处理…' });
+      })
+      .catch(function(e) {
+        reject(new Error('提交失败：' + e.message));
+      });
 
       var timer = setTimeout(function () {
-        reject(new Error('ComfyUI 任务超时（120s）'));
+        if (!executed) reject(new Error('ComfyUI 任务超时（120s）'));
       }, 120000);
 
-      var handler = function (evt) {
-        try {
-          var data = JSON.parse(evt.data);
-        } catch (e) { return; }
-        if (!data.type) return;
+      // 轮询检查任务状态
+      var pollTimer = setInterval(function () {
+        if (executed || !promptId) return;
 
-        switch (data.type) {
-          case 'status':
-            if (data.data && data.data.status && data.data.status.exec_info) {
-              onProgress && onProgress({ progress: 0, phase: '任务已入队，等待 ComfyUI 处理…' });
-            }
-            break;
-          case 'exec_start':
-            onProgress && onProgress({ progress: 0.02, phase: '正在执行节点…' });
-            break;
-          case 'executing':
-            if (data.data.node === null) {
-              onProgress && onProgress({ progress: 0.1, phase: '生成中…' });
-            } else {
-              onProgress && onProgress({ progress: 0.1, phase: '节点 ' + data.data.node + ' 执行中…' });
-            }
-            break;
-          case 'executed':
-            var output = data.data.output || {};
-            var images = output.images || [];
-            if (images.length) {
-              var baseUrl = ws.url.match(/:\/\/([^\/]+)/)[1];
-              var results = images.map(function (img) {
-                return baseUrl + '/view?' + buildViewQuery(img);
-              });
-              resolve(results);
-              ws.close();
-            }
-            break;
-          case 'progress':
-            var p = data.data.value / data.data.max || 0;
-            onProgress && onProgress({ progress: 0.1 + p * 0.8, phase: '生成中 ' + Math.round(p * 100) + '%…' });
-            break;
-          case 'execution_error':
-            clearTimeout(timer);
-            reject(new Error('ComfyUI 执行出错：' + (data.data.error || '未知错误')));
-            ws.close();
-            break;
-        }
-      };
+        fetch('/api/comfyui-history')
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (!data.history || data.history.length === 0) return;
 
-      ws.addEventListener('message', handler);
+            // 查找当前提交的任务（从最新开始查找）
+            var currentJob = null;
+            for (var i = data.history.length - 1; i >= 0; i--) {
+              var job = data.history[i];
+              var msg = job.status && job.status.messages ? job.status.messages[0] : null;
+              if (msg && msg[1] && msg[1].prompt_id === promptId) {
+                currentJob = job;
+                break;
+              }
+            }
 
-      setTimeout(function () {
-        ws.removeEventListener('message', handler);
-        clearTimeout(timer);
-        if (!ws.closed) reject(new Error('ComfyUI 响应超时'));
-      }, 120000);
+            if (!currentJob) return;
+
+            var statusStr = currentJob.status.status_str;
+
+            // 发送进度更新
+            if (statusStr === 'running' || statusStr === 'partial') {
+              var msgs = currentJob.status.messages || [];
+              for (var m = 0; m < msgs.length; m++) {
+                if (msgs[m][0] === 'exec_start') {
+                  onProgress && onProgress({ progress: 0.1, phase: '正在执行节点…' });
+                } else if (msgs[m][0] === 'execution_progress') {
+                  var p = msgs[m][1].value / msgs[m][1].max || 0;
+                  onProgress && onProgress({ progress: 0.1 + p * 0.8, phase: '生成中 ' + Math.round(p * 100) + '%…' });
+                }
+              }
+            }
+
+            // 检查完成
+            if (statusStr === 'success' && !executed) {
+              executed = true;
+              clearInterval(pollTimer);
+              clearTimeout(timer);
+
+              var allImages = [];
+              for (var nodeId in currentJob.outputs) {
+                if (currentJob.outputs[nodeId].images) {
+                  allImages = allImages.concat(currentJob.outputs[nodeId].images);
+                }
+              }
+
+              if (allImages.length) {
+                var results = allImages.map(function (img) {
+                  return baseUrl + '/view?' + buildViewQuery(img);
+                });
+                console.log('[ComfyUI] Generated', allImages.length, 'images');
+                resolve(results);
+              } else {
+                reject(new Error('生成失败：未获取到图片输出'));
+              }
+            } else if (statusStr === 'error' && !executed) {
+              executed = true;
+              clearInterval(pollTimer);
+              clearTimeout(timer);
+              var errorMsg = '';
+              var msgs = currentJob.status.messages || [];
+              for (var m = 0; m < msgs.length; m++) {
+                if (msgs[m][0] === 'execution_error') {
+                  errorMsg = msgs[m][1].error || '未知错误';
+                  break;
+                }
+              }
+              reject(new Error('ComfyUI 执行出错：' + errorMsg));
+            }
+          })
+          .catch(function(e) {
+            console.error('[ComfyUI] Poll error:', e.message);
+          });
+      }, 1500);
     });
   }
 
@@ -222,8 +328,9 @@ var ComfyUI = (function () {
     return loadWorkflow(mode, customPath).then(function (wf) {
       wf = injectPrompt(JSON.parse(JSON.stringify(wf)), opts.prompt, !!opts.images.length);
       wf = injectSeedAndImage(wf, opts.seed, opts.images && opts.images.length ? opts.images[0] : null, mode);
+      wf = convertToUUIDKeys(wf);
       return connect(loadConfig()).then(function (ws) {
-        return queueAndPoll(ws, wf, opts.onProgress).then(function (urls) {
+        return queueAndPoll(ws, wf, opts.onProgress, loadConfig().comfyuiUrl).then(function (urls) {
           return { urls: urls };
         });
       });
@@ -237,8 +344,9 @@ var ComfyUI = (function () {
     return loadWorkflow(mode, customPath).then(function (wf) {
       wf = injectPrompt(JSON.parse(JSON.stringify(wf)), opts.prompt, false);
       wf = injectSeedAndImage(wf, opts.seed, opts.images && opts.images.length ? opts.images[0] : null, mode);
+      wf = convertToUUIDKeys(wf);
       return connect(loadConfig()).then(function (ws) {
-        return queueAndPoll(ws, wf, opts.onProgress).then(function (urls) {
+        return queueAndPoll(ws, wf, opts.onProgress, loadConfig().comfyuiUrl).then(function (urls) {
           return { urls: urls, segments: urls.map(function (u, i) {
             return { url: u, dur: opts.duration || 10, idx: i };
           }) };

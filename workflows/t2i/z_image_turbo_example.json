@@ -1,7 +1,7 @@
 {
   "3": {
     "inputs": {
-      "seed": 119410335787045,
+      "seed": 407445935357146,
       "steps": 8,
       "cfg": 1,
       "sampler_name": "euler",
@@ -97,7 +97,7 @@
   },
   "16": {
     "inputs": {
-      "unet_name": "z_image_turbo_int8_convrot.safetensors",
+      "unet_name": "z_image_turbo_bf16.safetensors",
       "weight_dtype": "default"
     },
     "class_type": "UNETLoader",
@@ -123,18 +123,6 @@
     "class_type": "CLIPLoader",
     "_meta": {
       "title": "加载CLIP"
-    }
-  },
-  "30": {
-    "inputs": {
-      "images": [
-        "9",
-        0
-      ]
-    },
-    "class_type": "PreviewImage",
-    "_meta": {
-      "title": "预览图像"
     }
   }
 }

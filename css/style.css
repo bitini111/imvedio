@@ -943,6 +943,13 @@ textarea { font-family: inherit; }
   .lightbox-media img, .lightbox-media video { max-height: 60vh; }
 }
 
+
+/* ComfyUI 连接状态指示 */
+.sp-status { display: inline-block; margin-top: 6px; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 10px; line-height: 1.6; }
+.sp-status.online { color: #22c55e; background: rgba(34,197,94,.1); }
+.sp-status.offline { color: #f87171; background: rgba(248,113,113,.1); }
+.sp-status.checking { color: var(--text-3); background: rgba(128,128,128,.08); }
+
 /* 减少动画偏好 */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001s !important; transition-duration: .001s !important; }

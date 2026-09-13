@@ -1,11 +1,12 @@
 {
   "version": "0.0.1",
+  
   "configurations": [
     {
       "name": "halo",
       "runtimeExecutable": "node",
       "runtimeArgs": ["server.js"],
-      "port": 8653
+      "autoPort": true
     }
   ]
 }

@@ -86,7 +86,8 @@
     images: [],            // 上传的参考图 [{name, src}]
     params: { ratio: '1:1', style: '写实', count: 1, duration: 5, camera: '静止',
       customRatioW: 1024, customRatioH: 1024, // 自定义比例时的宽/高
-      customDuration: 5                         // 自定义时长
+      customDuration: 5,                        // 自定义时长
+      seed: '随机'                          // 种子：'随机' 或具体数字
     },
     config: Agnes.loadConfig(),
     generating: false,
@@ -251,7 +252,7 @@
       return '<button class="seg-btn" data-group="resolution" data-value="' + v + '">' + v + '</button>';
     }).join('');
     // 视频模式不显示分辨率选择
-    $('#resolutionGroup').classList.toggle('is-hidden', !isImg);
+    $('#resolutionGroup').classList.toggle('is-hidden', !isImg || state.config.engine === 'comfyui');
 
     // 比例
     var ratioEyebrow = document.querySelector('#ratioSeg').parentElement.querySelector('.eyebrow');
@@ -279,15 +280,34 @@
     // 视频时长
     var countEyebrow = document.querySelector('#countGroup .eyebrow');
     if (countEyebrow) countEyebrow.textContent = I18N.t('labelCount');
+        // 种子
+    var seedInput = document.querySelector("#seedGroup");
+    if (!seedInput) {
+      var seedRow = '<div class="param-group" id="seedGroup">' +
+        '<span class="eyebrow">' + I18N.t("labelSeed") + '</span>' +
+        '<div style="display:flex;gap:8px;align-items:center;">' +
+          '<input type="text" class="sp-input" id="seedInput" value="' + (p.seed || "随机") + '" placeholder="随机" maxlength="11" style="width:120px;padding:7px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg-elev);color:var(--text);font-size:13px;">' +
+          '<span style="color:var(--text-3);font-size:11px">填数字锁定种子，留空/写随机则每次不同</span>' +
+        '</div>' +
+      '</div>';
+      var countG = document.querySelector("#countGroup");
+      if (countG) countG.insertAdjacentHTML("afterend", seedRow);
+    } else {
+      if (p.seed) seedInput.value = p.seed;
+      else seedInput.value = "随机";
+    }
+
     $('#countSeg').innerHTML = [1, 4].map(function (v) {
       var key = v === 1 ? 'imgCountOne' : 'imgCount';
       return '<button class="seg-btn" data-group="count" data-value="' + v + '">' + I18N.t(key, v) + '</button>';
     }).join('');
 
-    $('#styleGroup').classList.toggle('is-hidden', !isImg);
+    $('#styleGroup').classList.toggle('is-hidden', !isImg || state.config.engine === 'comfyui');
     $('#countGroup').classList.toggle('is-hidden', !isImg);
     $('#durationGroup').classList.toggle('is-hidden', isImg);
+    $('#seedGroup').classList.toggle('is-hidden', !isImg);
     $('#cameraGroup').classList.toggle('is-hidden', isImg);
+    $('#resolutionGroup').classList.toggle('is-hidden', !isImg || state.config.engine === 'comfyui');
 
     if (mm.durations) {
       var dd = mm.durations.slice();
@@ -326,6 +346,7 @@
     if (isImg) {
       highlight('styleSeg', 'style', p.style);
       highlight('countSeg', 'count', String(p.count));
+      highlight('seedSeg', 'seed', p.seed || '随机');
     } else {
       highlight('durationSeg', 'duration', String(p.duration));
       highlight('cameraSeg', 'camera', p.camera);
@@ -534,6 +555,7 @@
     if (run.params.resolution) a.push(run.params.resolution);
     if (run.params.style) a.push(run.params.style);
     if (run.params.count > 1) a.push(run.params.count + ' 张');
+    if (run.params.seed && run.params.seed !== '随机') a.push('种子 ' + run.params.seed);
     if (run.params.duration) a.push(run.params.duration >= 60 ? '1 分钟' : run.params.duration + ' 秒');
     if (run.params.camera) a.push('运镜·' + run.params.camera);
     if (run.images && run.images.length) a.push(run.images.length + ' 张参考图');
@@ -813,7 +835,8 @@
         camera: mm.out === 'video' ? p.camera : undefined,
         resolution: mm.resolutions ? p.resolution || mm.defaultRes : undefined,
         customRatioW: p.customRatioW,
-        customRatioH: p.customRatioH
+        customRatioH: p.customRatioH,
+        seed: p.seed || "随机"
       },
       images: state.images.map(function (i) { return i.src; }),
       status: 'generating',
@@ -854,14 +877,17 @@
   function composePrompt(run) {
     var p = run.prompt;
     var mm = MODES[run.kind];
+    var useComfyUI = state.config.engine === 'comfyui' || state.forceComfyUI;
     if (mm.out === 'image') {
-      p = p + '，' + (STYLE_SUFFIX[run.params.style] || '');
-      // 添加分辨率信息
-      if (run.params.resolution && run.params.resolution !== '1K') {
-        p = p + '，分辨率 ' + run.params.resolution;
+      if (!useComfyUI) {
+        p = p + '，' + (STYLE_SUFFIX[run.params.style] || '');
+        // 添加分辨率信息
+        if (run.params.resolution && run.params.resolution !== '1K') {
+          p = p + '，分辨率 ' + run.params.resolution;
+        }
       }
       // 自定义比例
-      if (run.params.ratio === '自定义' && run.params.customRatioW) {
+      if (run.params.ratio === '自定义' && run.params.customRatioW && !useComfyUI) {
         p = p + '，' + run.params.customRatioW + 'x' + (run.params.customRatioH || run.params.customRatioW);
       }
     } else {
@@ -905,7 +931,7 @@
         ratio: effRatio(run),
         style: run.params.style,
         images: run.images.length ? run.images : undefined,
-        seed: RNG.hashString(run.prompt + ':' + idx + ':' + Math.random()),
+        seed: run.params.seed && run.params.seed !== '随机' ? parseInt(run.params.seed, 10) : RNG.hashString(run.prompt + ':' + idx + ':' + Math.random()),
         resolution: run.params.resolution || '1K',
         customSize: run.params.ratio === '自定义' ? [run.params.customRatioW, run.params.customRatioH] : undefined
       }).then(function (url) {
@@ -1066,9 +1092,12 @@
       ComfyUI.genImage({
         mode: run.kind === 'i2i' ? 'i2i' : 't2i',
         prompt: composePrompt(run),
-        seed: RNG.hashString(run.prompt + ':' + completed),
+        seed: run.params.seed && run.params.seed !== '随机' ? parseInt(run.params.seed, 10) : Math.floor(10000000000 + Math.random() * 90000000000),
         images: run.images.length ? run.images : [],
         workflowPath: ComfyUI.getCustomWorkflow(run.kind === 'i2i' ? 'i2i' : 't2i'),
+        aspectRatio: state.config.engine === 'comfyui' ? undefined : effRatio(run),
+        resolution: state.config.engine === 'comfyui' ? undefined : run.params.resolution,
+        customSize: state.config.engine === 'comfyui' ? undefined : (run.params.ratio === '自定义' ? [run.params.customRatioW, run.params.customRatioH] : undefined),
         onProgress: function (p) {
           if (state.cancelReq) return;
           run.progress = Math.min(0.95, (completed + p.progress) / n);
@@ -1473,6 +1502,7 @@
         if (group === 'ratio') state.params.ratio = val;
         else if (group === 'style') state.params.style = val;
         else if (group === 'count') state.params.count = parseInt(val, 10);
+        else if (group === 'seed') { state.params.seed = val.trim() || '随机'; }
         else if (group === 'duration') state.params.duration = val === '自定义' ? '自定义' : parseInt(val, 10);
         else if (group === 'camera') state.params.camera = val;
         else if (group === 'resolution') state.params.resolution = val;
@@ -1491,6 +1521,10 @@
         if (v >= 1 && v <= (MODES[state.mode]?.customDurMax || 12)) {
           state.params.customDuration = v;
         }
+        return;
+      }
+      if (e.target.id === 'seedInput') {
+        state.params.seed = e.target.value.trim() || '随机';
         return;
       }
       var act = e.target.closest('[data-action]');
@@ -1539,24 +1573,8 @@
     $('#apiKeyInput').value = cfg.apiKey;
     $('#quotaLimitInput').value = state.quotaLimit;
     $('#comfyuiUrlInput').value = cfg.comfyuiUrl || (ComfyUI.DEFAULT_URL || 'http://127.0.0.1:8188' || 'http://127.0.0.1:8188');
-    // 加载已保存的工作流选择
-    ['t2i', 'i2i', 't2v', 'i2v'].forEach(function (mode) {
-      var sel = $('#workflow' + mode.toUpperCase());
-      if (sel) sel.value = ComfyUI.getCustomWorkflow(mode) || '';
-    });
-    // 动态加载工作流列表
-    if (cfg.engine === 'comfyui') {
-      ComfyUI.loadWorkflowOptions().then(function (options) {
-        ComfyUI.populateWorkflowSelects(options);
-        // 恢复已保存的选择
-        ['t2i', 'i2i', 't2v', 'i2v'].forEach(function (mode) {
-          var sel = $('#workflow' + mode.toUpperCase());
-          if (sel) sel.value = ComfyUI.getCustomWorkflow(mode) || '';
-        });
-      }).catch(function (e) {
-        console.error('加载工作流列表失败:', e.message);
-      });
-    }
+    _loadWorkflowSelects(cfg.engine === 'comfyui');
+    if (cfg.engine === 'comfyui') checkComfyUIStatus();
     ['ai', 'comfyui'].forEach(function (v) {
       var el = $('#engineSeg [data-engine="' + v + '"]');
       if (el) {
@@ -1581,6 +1599,40 @@
   function closeSettings() {
     $('#settingsModal').classList.add('is-hidden');
   }
+  function checkComfyUIStatus() {
+    var el = document.getElementById('comfyuiStatus');
+    if (!el) return;
+    var url = ($('#comfyuiUrlInput').value || '').trim() || ComfyUI.DEFAULT_URL;
+    el.className = 'sp-status checking';
+    el.textContent = '检测中…';
+    fetch('/api/comfyui-ping?url=' + encodeURIComponent(url)).then(function(r) { return r.json(); }).then(function(d) {
+      if (d.ok) { el.className = 'sp-status online'; el.textContent = '在线'; }
+      else { el.className = 'sp-status offline'; el.textContent = '离线'; }
+    }).catch(function() { el.className = 'sp-status offline'; el.textContent = '离线'; });
+  }
+
+  function _loadWorkflowSelects(populate) {
+    ComfyUI.loadWorkflowOptions().then(function (options) {
+      if (populate) ComfyUI.populateWorkflowSelects(options);
+      ['t2i', 'i2i', 't2v', 'i2v'].forEach(function (mode) {
+        var sel = document.getElementById('workflow' + mode.toUpperCase());
+        if (sel) sel.value = ComfyUI.getCustomWorkflow(mode) || '';
+      });
+    }).catch(function (e) {
+      console.error('加载工作流列表失败:', e.message);
+    });
+  }
+
+  // ComfyUI URL 输入框变化时实时检测状态
+  (function() {
+    var _ct;
+    var input = document.getElementById('comfyuiUrlInput');
+    if (!input) return;
+    input.addEventListener('input', function() {
+      clearTimeout(_ct);
+      _ct = setTimeout(checkComfyUIStatus, 600);
+    });
+  })();
   function initSettings() {
     $('#settingsModal').addEventListener('click', function (e) {
       if (e.target.id === 'settingsModal') closeSettings();
@@ -1601,7 +1653,10 @@
       $('#workflowFields').classList.toggle('is-hidden', state.config.engine !== 'comfyui');
       $('#apiKeyField').classList.toggle('is-hidden', state.config.engine !== 'ai');
       $('#videoModelField').classList.toggle('is-hidden', state.config.engine !== 'ai');
+      // 切换到 ComfyUI 时实时刷新工作流列表
+      if (state.config.engine === 'comfyui') { _loadWorkflowSelects(true); checkComfyUIStatus(); }
       renderTopbar();
+      renderCreator();
     });
     $('#videoModelSeg').addEventListener('click', function (e) {
       var b = e.target.closest('[data-vmodel]');
@@ -1633,7 +1688,7 @@
       // 保存自定义工作流路径
       ['t2i', 'i2i', 't2v', 'i2v'].forEach(function (mode) {
         var sel = $('#workflow' + mode.toUpperCase());
-        if (sel) ComfyUI.saveCustomWorkflow(mode, sel.value || null);
+        if (sel) state.config['workflow_' + mode] = sel.value || undefined;
       });
       Agnes.saveConfig(state.config);
       renderTopbar();

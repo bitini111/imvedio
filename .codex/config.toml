@@ -1,0 +1,5 @@
+# 1. 解除沙箱边界限制（允许访问所有磁盘路径和网络）
+sandbox_mode = "danger-full-access"
+
+# 2. 关闭审批提示（允许自动执行所有文件编辑和终端命令，无需用户手动点允许）
+approval_policy = "never"

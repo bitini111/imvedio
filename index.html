@@ -189,15 +189,15 @@
         <button class="seg-btn" data-engine="ai" role="radio" aria-checked="true">AI 接口</button>
         <button class="seg-btn" data-engine="comfyui" role="radio" aria-checked="false">ComfyUI（本地）</button>
       </div>
-      <p class="sp-hint" data-i18n="hintEngine">AI 接口：调用 Agnes AI 真实生成；ComfyUI：连接本地 ComfyUI 服务，从 workflows/ 目录加载工作流，支持文生图/图生图/文生视频/图生视频。</p>
+      <p class="sp-hint">切换生成引擎，AI 接口使用云端 API，ComfyUI（本地）直接调用本机 ComfyUI 服务。</p>
     </div>
 
     <div class="sp-field is-hidden" id="comfyuiUrlGroup">
       <span class="sp-label" data-i18n="settingComfyuiUrl">ComfyUI 地址</span>
       <input type="text" class="sp-input" id="comfyuiUrlInput"
         placeholder="http://127.0.0.1:8188">
-      <p class="sp-hint" data-i18n="hintComfyuiUrl">填写本地 ComfyUI 服务的地址，默认 http://127.0.0.1:8188。工作流文件位于项目根目录 workflows/ 下的 t2i/ i2i/ t2v/ i2v/ 四个子目录中。</p>
-    </div>
+      <span class="sp-status checking" id="comfyuiStatus">检测中…</span>
+      <p class="sp-hint">本机 ComfyUI 服务的地址和端口，默认 http://127.0.0.1:8188。</p></div>
 
     <div class="sp-field is-hidden" id="workflowFields">
       <span class="sp-label" data-i18n="settingWorkflow">工作流文件</span>
@@ -206,29 +206,25 @@
           <label>文生图：</label>
           <select id="workflowT2I" class="sp-select">
             <option value="">使用默认</option>
-            <option value="workflows/t2i/text_to_image.json">workflows/t2i/text_to_image.json</option>
-          </select>
+                      </select>
         </div>
         <div class="workflow-row">
           <label>图生图：</label>
           <select id="workflowI2I" class="sp-select">
             <option value="">使用默认</option>
-            <option value="workflows/i2i/image_to_image.json">workflows/i2i/image_to_image.json</option>
-          </select>
+                      </select>
         </div>
         <div class="workflow-row">
           <label>文生视频：</label>
           <select id="workflowT2V" class="sp-select">
             <option value="">使用默认</option>
-            <option value="workflows/t2v/text_to_video.json">workflows/t2v/text_to_video.json</option>
-          </select>
+                      </select>
         </div>
         <div class="workflow-row">
           <label>图生视频：</label>
           <select id="workflowI2V" class="sp-select">
             <option value="">使用默认</option>
-            <option value="workflows/i2v/image_to_video.json">workflows/i2v/image_to_video.json</option>
-          </select>
+                      </select>
         </div>
       </div>
       <p class="sp-hint">选择要使用的工作流文件，留空则使用默认工作流。</p>

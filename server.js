@@ -80,6 +80,76 @@ http.createServer(async (req, res) => {
     return;
   }
 
+  // —— ComfyUI 输出文件列表 API ——
+  if (pathname === '/api/comfyui/outputs') {
+    const CF_ROOT = 'D:/Program Files/ComfyUI/ComfyUI';
+    const OUT_DIR = path.join(CF_ROOT, 'output');
+    const TEMP_DIR = path.join(CF_ROOT, 'temp');
+    try {
+      const allFiles = []
+        .concat(fs.readdirSync(OUT_DIR).map(f => ({filename: f, dir: 'output'})))
+        .concat(fs.readdirSync(TEMP_DIR).map(f => ({filename: f, dir: 'temp'})));
+      const pngFiles = allFiles.filter(f => f.filename.match(/\.(png|jpg|jpeg)$/i));
+      pngFiles.sort((a, b) => {
+        const dirA = a.dir === 'temp' ? TEMP_DIR : OUT_DIR;
+        const dirB = b.dir === 'temp' ? TEMP_DIR : OUT_DIR;
+        const mA = fs.statSync(path.join(dirA, a.filename)).mtime;
+        const mB = fs.statSync(path.join(dirB, b.filename)).mtime;
+        return mB - mA;
+      });
+      const urls = pngFiles.slice(0, 10).map(f => {
+        const q = 'filename=' + encodeURIComponent(f.filename) + '&type=' + f.dir;
+        return 'http://127.0.0.1:8188/view?' + q;
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ outputs: urls }));
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: e.message }));
+    }
+    return;
+  }
+
+  // —— ComfyUI 连接检测 API ——
+  if (pathname === '/api/comfyui-ping') {
+    const targetUrl = url.searchParams.get('url');
+    if (!targetUrl) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: '缺少 url 参数' }));
+      return;
+    }
+    fetch(targetUrl.replace(/\/+$/, '') + '/system_stats')
+      .then(function(r) { return r.ok ? { ok: true } : { ok: false }; })
+      .then(function(d) { res.writeHead(200, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(d)); })
+      .catch(function() { res.writeHead(200, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ ok: false })); });
+    return;
+  }
+
+  // —— ComfyUI 历史 API ——
+  if (pathname === '/api/comfyui-history') {
+    fetch('http://127.0.0.1:8188/history')
+      .then(function(r) { return r.json(); })
+      .then(function(h) {
+        // 按 create_time（任务创建时间）降序排列，最新的在前
+        var entries = Object.keys(h).map(function(k) {
+          return { id: k, data: h[k] };
+        });
+        entries.sort(function(a, b) {
+          var timeA = a.data.status.messages && a.data.status.messages[0] ? a.data.status.messages[0][1].timestamp : 0;
+          var timeB = b.data.status.messages && b.data.status.messages[0] ? b.data.status.messages[0][1].timestamp : 0;
+          return timeB - timeA; // 降序：最新的在前
+        });
+        var history = entries.map(function(e) { return e.data; });
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ history: history }));
+      })
+      .catch(function(e) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: e.message }));
+      });
+    return;
+  }
+
   // —— Agnes AI 同源代理 ——
   if (pathname.startsWith('/api/')) {
     let target;
