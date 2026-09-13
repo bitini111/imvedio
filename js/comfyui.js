@@ -198,15 +198,15 @@ var ComfyUI = (function () {
   var _connId = 0;
   function uid() { return 'agg-' + Date.now() + '-' + (++_connId); }
 
-  /* ---------- 提交任务并轮询，返回结果 URL ---------- */
-  function queueAndPoll(ws, promptObj, onProgress, comfyuiUrl) {
+  /* ---------- 提交任务并监听 WebSocket 进度，返回结果 URL ---------- */
+  function queueAndPoll(ws, promptObj, onProgress, comfyuiUrl, clientId) {
     return new Promise(function (resolve, reject) {
-      var clientId = ws.url.split('clientId=')[1] || uid();
       var baseUrl = comfyuiUrl || 'http://127.0.0.1:8188';
       baseUrl = baseUrl.replace(/\/+$/, '');
 
       var promptId = null;
       var executed = false;
+      var wsProgress = 0; // WebSocket 进度（0-1），用于显示百分比
 
       // 通过 HTTP POST 提交任务，获取 prompt_id
       fetch(baseUrl + '/prompt', {
@@ -232,7 +232,78 @@ var ComfyUI = (function () {
         if (!executed) reject(new Error('ComfyUI 任务超时（120s）'));
       }, 120000);
 
-      // 轮询检查任务状态
+      // 监听 WebSocket 进度事件
+      var progressHandler = function (evt) {
+        try { var d = JSON.parse(evt.data); } catch (e) { return; } // 忽略二进制数据
+        // prompt_id 可能在顶层（如 execution_start）或在 data 里（如 progress）
+        var evtPromptId = d.prompt_id || (d.data && d.data.prompt_id);
+        if (!evtPromptId || evtPromptId !== promptId) return;
+
+        if (d.type === 'progress') {
+          // progress 事件格式: {type: "progress", data: {value, max, node, prompt_id}}
+          if (d.data && d.data.max > 0) {
+            wsProgress = Math.max(wsProgress, d.data.value / d.data.max);
+            var displayProgress = 0.1 + wsProgress * 0.85; // 10%~95%
+            onProgress && onProgress({
+              progress: Math.min(0.95, displayProgress),
+              phase: '生成中 ' + Math.round(wsProgress * 100) + '%…'
+            });
+          }
+        } else if (d.type === 'execution_start') {
+          onProgress && onProgress({ progress: 0.1, phase: '正在执行节点…' });
+        } else if (d.type === 'execution_cached') {
+          // 节点被缓存，生成很快完成，继续等待
+          onProgress && onProgress({ progress: 0.15, phase: '使用缓存…' });
+        } else if (d.type === 'execution_success') {
+          if (!executed) {
+            executed = true;
+            clearInterval(pollTimer);
+            clearTimeout(timer);
+            ws.removeEventListener('message', progressHandler);
+            // 从历史 API 获取结果
+            fetch('/api/comfyui-history')
+              .then(function(r) { return r.json(); })
+              .then(function(hdata) {
+                var job = null;
+                for (var i = (hdata.history || []).length - 1; i >= 0; i--) {
+                  var j = hdata.history[i];
+                  if (j.prompt && j.prompt[1] === promptId) { job = j; break; }
+                }
+                if (!job) { reject(new Error('生成完成但未找到结果')); return; }
+                var allImages = [];
+                for (var nodeId in job.outputs) {
+                  if (job.outputs[nodeId].images) {
+                    allImages = allImages.concat(job.outputs[nodeId].images);
+                  }
+                }
+                if (allImages.length) {
+                  var results = allImages.map(function (img) {
+                    return baseUrl + '/view?' + buildViewQuery(img);
+                  });
+                  console.log("[ComfyUI] Generated", allImages.length, "images");
+                  resolve(results);
+                } else {
+                  reject(new Error('生成失败：未获取到图片输出'));
+                }
+              })
+              .catch(function(e) {
+                reject(new Error('获取结果失败：' + e.message));
+              });
+          }
+        } else if (d.type === 'execution_error') {
+          if (!executed) {
+            executed = true;
+            clearInterval(pollTimer);
+            clearTimeout(timer);
+            ws.removeEventListener('message', progressHandler);
+            var errorMsg = (d.data && d.data.exception_message) || '未知错误';
+            reject(new Error('ComfyUI 执行出错：' + errorMsg));
+          }
+        }
+      };
+      ws.addEventListener('message', progressHandler);
+
+      // 备用：轮询历史 API（每 1 秒）
       var pollTimer = setInterval(function () {
         if (executed || !promptId) return;
 
@@ -241,12 +312,12 @@ var ComfyUI = (function () {
           .then(function(data) {
             if (!data.history || data.history.length === 0) return;
 
-            // 查找当前提交的任务（从最新开始查找）
+            // 查找当前提交的任务
             var currentJob = null;
             for (var i = data.history.length - 1; i >= 0; i--) {
               var job = data.history[i];
-              var msg = job.status && job.status.messages ? job.status.messages[0] : null;
-              if (msg && msg[1] && msg[1].prompt_id === promptId) {
+              var jobId = job.prompt && job.prompt[1];
+              if (jobId === promptId) {
                 currentJob = job;
                 break;
               }
@@ -256,24 +327,17 @@ var ComfyUI = (function () {
 
             var statusStr = currentJob.status.status_str;
 
-            // 发送进度更新
-            if (statusStr === 'running' || statusStr === 'partial') {
-              var msgs = currentJob.status.messages || [];
-              for (var m = 0; m < msgs.length; m++) {
-                if (msgs[m][0] === 'exec_start') {
-                  onProgress && onProgress({ progress: 0.1, phase: '正在执行节点…' });
-                } else if (msgs[m][0] === 'execution_progress') {
-                  var p = msgs[m][1].value / msgs[m][1].max || 0;
-                  onProgress && onProgress({ progress: 0.1 + p * 0.8, phase: '生成中 ' + Math.round(p * 100) + '%…' });
-                }
-              }
+            // 如果 WebSocket 没捕获到进度，这里提供备用进度
+            if ((statusStr === 'running' || statusStr === 'partial') && wsProgress < 0.05) {
+              onProgress && onProgress({ progress: 0.1, phase: '正在执行节点…' });
             }
 
-            // 检查完成
+            // 检查完成（备用路径）
             if (statusStr === 'success' && !executed) {
               executed = true;
               clearInterval(pollTimer);
               clearTimeout(timer);
+              ws.removeEventListener('message', progressHandler);
 
               var allImages = [];
               for (var nodeId in currentJob.outputs) {
@@ -286,7 +350,7 @@ var ComfyUI = (function () {
                 var results = allImages.map(function (img) {
                   return baseUrl + '/view?' + buildViewQuery(img);
                 });
-                console.log('[ComfyUI] Generated', allImages.length, 'images');
+                console.log("[ComfyUI] Generated", allImages.length, "images");
                 resolve(results);
               } else {
                 reject(new Error('生成失败：未获取到图片输出'));
@@ -295,6 +359,7 @@ var ComfyUI = (function () {
               executed = true;
               clearInterval(pollTimer);
               clearTimeout(timer);
+              ws.removeEventListener('message', progressHandler);
               var errorMsg = '';
               var msgs = currentJob.status.messages || [];
               for (var m = 0; m < msgs.length; m++) {
@@ -309,7 +374,7 @@ var ComfyUI = (function () {
           .catch(function(e) {
             console.error('[ComfyUI] Poll error:', e.message);
           });
-      }, 1500);
+      }, 1000);
     });
   }
 
@@ -329,8 +394,11 @@ var ComfyUI = (function () {
       wf = injectPrompt(JSON.parse(JSON.stringify(wf)), opts.prompt, !!opts.images.length);
       wf = injectSeedAndImage(wf, opts.seed, opts.images && opts.images.length ? opts.images[0] : null, mode);
       wf = convertToUUIDKeys(wf);
-      return connect(loadConfig()).then(function (ws) {
-        return queueAndPoll(ws, wf, opts.onProgress, loadConfig().comfyuiUrl).then(function (urls) {
+      var cfg = loadConfig();
+      return connect(cfg).then(function (ws) {
+        // 从 WebSocket URL 提取 clientId，确保与提交任务时一致
+        var clientId = ws.url.split('clientId=')[1] || uid();
+        return queueAndPoll(ws, wf, opts.onProgress, cfg.comfyuiUrl, clientId).then(function (urls) {
           return { urls: urls };
         });
       });
@@ -345,8 +413,11 @@ var ComfyUI = (function () {
       wf = injectPrompt(JSON.parse(JSON.stringify(wf)), opts.prompt, false);
       wf = injectSeedAndImage(wf, opts.seed, opts.images && opts.images.length ? opts.images[0] : null, mode);
       wf = convertToUUIDKeys(wf);
-      return connect(loadConfig()).then(function (ws) {
-        return queueAndPoll(ws, wf, opts.onProgress, loadConfig().comfyuiUrl).then(function (urls) {
+      var cfg = loadConfig();
+      return connect(cfg).then(function (ws) {
+        // 从 WebSocket URL 提取 clientId，确保与提交任务时一致
+        var clientId = ws.url.split('clientId=')[1] || uid();
+        return queueAndPoll(ws, wf, opts.onProgress, cfg.comfyuiUrl, clientId).then(function (urls) {
           return { urls: urls, segments: urls.map(function (u, i) {
             return { url: u, dur: opts.duration || 10, idx: i };
           }) };
